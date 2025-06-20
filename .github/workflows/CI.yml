@@ -1,0 +1,75 @@
+name: Build modules
+
+on:
+  push:
+    paths-ignore:
+      - "**/*.md"
+      - '**/*.txt'
+  pull_request:
+    paths-ignore:
+      - "**/*.md"
+      - '**/*.txt'
+  workflow_dispatch:
+
+# for release create
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  build_prx:
+    runs-on: ubuntu-latest
+    env:
+      zip: plugins.zip
+      zip_glob: bin/plugins/prx_final/*.prx
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@main
+      with:
+        fetch-depth: 0
+        submodules: recursive
+
+    - name: Setup variables
+      run: |
+        sudo apt install llvm lld
+        echo "commit_ver=1.$(git rev-list HEAD --count)" >> $GITHUB_ENV
+        echo "commit_hash=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_ENV
+
+    - name: Download OpenOrbis Toolchain
+      run: |
+        f=toolchain-llvm-18.2
+        curl -fLJO https://github.com/OpenOrbis/OpenOrbis-PS4-Toolchain/releases/download/v0.5.3/$f.zip
+        unzip $f.zip
+        tar -xzf toolchain-llvm-18.tar.gz -C ./
+        ls .
+        echo "OO_PS4_TOOLCHAIN=$PWD/OpenOrbis/PS4Toolchain" >> $GITHUB_ENV
+
+    - name: Build bootloader
+      run: make -C plugin_bootloader
+
+    - name: Build loader
+      run: make -C plugin_loader
+
+    - name: Build samples
+      run: |
+        make -C plugin_example
+
+    - name: Zip
+      run: zip ${{ env.zip }} ${{ env.zip_glob }}
+
+    - name: Upload plugins
+      if: github.event_name != 'push'
+      uses: actions/upload-artifact@main
+      with:
+        name: ${{ env.zip }}
+        path: ${{ env.zip_glob }}
+
+    - name: Release
+      if: github.event_name != 'pull_request'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: gh release create b${{ github.run_number }} ${{ env.zip }} --target ${{ github.sha }} -t "Build ${{ github.run_number }}" -p
