@@ -57,6 +57,7 @@ jobs:
     - name: Build samples
       run: |
         make -C plugin_example
+        make -C plugin_server
 
     - name: Zip
       run: zip ${{ env.zip }} ${{ env.zip_glob }}
