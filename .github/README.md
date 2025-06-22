@@ -8,9 +8,12 @@ Plugin system for Updated PS4 Homebrew Enabler [ps4-hen-vtx](https://github.com/
   - Demonstrate usage of CXX in module.
   - Based from OpenOrbis [`library_example`](https://github.com/OpenOrbis/OpenOrbis-PS4-Toolchain/blob/63c0be5ffff09fbaebebc6b9a738d150e2da0205/samples/library_example/library_example/lib.cpp)
 - `plugin_server`
-  - Starts klog on port 3232 (assuming process has access to `/dev/klog`, i.e `ScePartyDaemonMain`)
+  - Starts klog on port 3232 <!-- (assuming process has access to `/dev/klog`, i.e `ScePartyDaemonMain`) -->
   - Based on [klogsrv](https://github.com/ps5-payload-dev/klogsrv)
-    - klogsrv is licensed under GPL3 but this repository and it's code is licensed under MIT. The notice for klogsrv is reproduced below.
+  - Starts FTP server on port 2121.
+  - Based on [ftpsrv](https://github.com/ps5-payload-dev/ftpsrv)
+    - **Note: No SELF decryption yet.**
+    - klogsrv and ftpsrv is licensed under GPL3 but this repository and it's code is licensed under MIT. The notice for mentioned projects is reproduced below.
     - <details> <summary> Notice (Click to view) </summary>
       
       ```
@@ -38,3 +41,4 @@ Plugin system for Updated PS4 Homebrew Enabler [ps4-hen-vtx](https://github.com/
 - [GoldHEN Plugin SDK](https://github.com/GoldHEN/GoldHEN_Plugins_SDK) for minimal crt.
 - [OpenOrbis Toolchain](https://github.com/OpenOrbis/OpenOrbis-PS4-Toolchain) for toolchain.
 - [klogsrv](https://github.com/ps5-payload-dev/klogsrv) for klog server.
+- [ftpsrv](https://github.com/ps5-payload-dev/ftpsrv) for FTP server.

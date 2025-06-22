@@ -19,7 +19,7 @@ TARGETSTUB   := $(OUTPUT_PRX).so
 COMMON_DIR    := ../common
 
 # Libraries linked into the ELF.
-LIBS := -lSceLibcInternal -lkernel
+LIBS := -lSceLibcInternal -lkernel -lc # link with libc for errno
 
 EXTRAFLAGS := $(DEBUG_FLAGS) $(LOG_TYPE) -fcolor-diagnostics -Wall
 
@@ -31,9 +31,8 @@ INTDIR        := ../$(shell basename $(CURDIR))/build
 INCLUDEDIR    := ../$(shell basename $(CURDIR))/include
 
 # Define objects to build
-CFILES      := $(wildcard $(PROJDIR)/*.c)
-CPPFILES    := $(wildcard $(PROJDIR)/*.cpp)
-COMMONFILES := $(wildcard $(COMMONDIR)/*.cpp)
+CFILES      := $(shell find $(PROJDIR) -name '*.c')
+CPPFILES    := $(shell find $(PROJDIR) -name '*.cpp')
 OBJS        := $(patsubst $(PROJDIR)/%.c, $(INTDIR)/%.o, $(CFILES)) $(patsubst $(PROJDIR)/%.cpp, $(INTDIR)/%.o, $(CPPFILES)) $(patsubst $(COMMONDIR)/%.cpp, $(INTDIR)/%.o, $(COMMONFILES))
 STUBOBJS    := $(patsubst $(PROJDIR)/%.c, $(INTDIR)/%.o, $(CFILES)) $(patsubst $(PROJDIR)/%.cpp, $(INTDIR)/%.o.stub, $(CPPFILES)) $(patsubst $(COMMONDIR)/%.cpp, $(INTDIR)/%.o.stub, $(COMMONFILES))
 
@@ -67,24 +66,23 @@ $(BUILD_FOLDER)/prx$(TYPE):
 $(BUILD_FOLDER)/elf$(TYPE):
 	mkdir -p $(BUILD_FOLDER)/elf$(TYPE)
 
+$(INTDIR)/%/:
+	mkdir -p $(@D)
+
 $(TARGET): $(INTDIR) $(BUILD_FOLDER)/prx$(TYPE) $(BUILD_FOLDER)/elf$(TYPE) $(OBJS)
-	$(LD) $(INTDIR)/*.o -o $(TARGET_ELF).elf $(LDFLAGS)
+	$(LD) $(shell find $(INTDIR) -name '*.o') -o $(TARGET_ELF).elf $(LDFLAGS)
 	$(TOOLCHAIN)/bin/$(CDIR)/create-fself -in=$(TARGET_ELF).elf -out=$(TARGET_ELF).oelf --lib=$(TARGET).prx --paid 0x3800000000000011
 
 $(TARGETSTUB): $(INTDIR) $(STUBOBJS)
 	$(CC) $(INTDIR)/*.o.stub -o $(TARGETSTUB) -target x86_64-pc-linux-gnu -shared -fuse-ld=lld -ffreestanding -nostdlib -fno-builtin -L$(TOOLCHAIN)/lib $(LIBS)
 
 $(INTDIR)/%.o: $(PROJDIR)/%.c
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -o $@ $<
 
 $(INTDIR)/%.o: $(PROJDIR)/%.cpp
+	@mkdir -p $(dir $@)
 	$(CCX) $(CXXFLAGS) -o $@ $<
-
-$(INTDIR)/%.o.stub: $(PROJDIR)/%.c
-	$(CC) -target x86_64-pc-linux-gnu -ffreestanding -nostdlib -fno-builtin -fPIC $(O_FLAG) -s -c -o $@ $<
-
-$(INTDIR)/%.o.stub: $(PROJDIR)/%.cpp
-	$(CCX) -target x86_64-pc-linux-gnu -ffreestanding -nostdlib -fno-builtin -fPIC $(O_FLAG) -s -c -o $@ $<
 
 build-info:
 	$(shell echo "#define GIT_COMMIT \"$(shell git rev-parse HEAD)\"" > $(COMMON_DIR)/git_ver.h)
