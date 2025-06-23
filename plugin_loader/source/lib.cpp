@@ -20,6 +20,8 @@ extern "C" int plugin_load(int* argc, const char** argv)
     os << "Hi I'm from the library!\n"
        << "You passed: " << *argc << " args\n"
        << "Built: " << __TIME__ << " " << __DATE__;
+    printf("%s\n", os.str().c_str());
+    return 0;
     Notify(TEX_ICON_SYSTEM, os.str().c_str());
     return 0;
 }
