@@ -320,11 +320,20 @@ ftp_serve(uint16_t port, int notify_user)
             continue;
         }
 
+        char msg[256] = {};
+        snprintf(msg, sizeof(msg),
+                 "Serving FTP\n"
+                 "on %s:%d (%s)\n"
+                 "Compiled on %s %s\n",
+                 ip,
+                 port,
+                 ifa->ifa_name,
+                 __DATE__,
+                 __TIME__);
         if (notify_user)
         {
-            Notify(TEX_ICON_SYSTEM, "Serving FTP on %s:%d (%s)", ip, port, ifa->ifa_name);
+            Notify(TEX_ICON_SYSTEM, msg);
         }
-        printf("Serving FTP on %s:%d (%s)\n", ip, port, ifa->ifa_name);
         ifaddr_wait = 0;
     }
 
