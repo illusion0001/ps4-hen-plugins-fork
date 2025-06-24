@@ -44,3 +44,6 @@ bin/*
 # Version file
 common/git_ver.h
 **/*.bak
+
+**/.vscode
+**/.vs
