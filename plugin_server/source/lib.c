@@ -47,6 +47,7 @@ void* pthread_ftp(void* args)
     {
 #if LOG_PRINTF_TO_TTY
         int open(const char*, int);
+        int close(int);
         const int O_WRONLY = 2;
         const int stdout_ = 1;
         const int stderr_ = 2;
@@ -55,12 +56,11 @@ void* pthread_ftp(void* args)
         {
             dup2(fd, stdout_);
             dup2(stdout_, stderr_);
+            close(fd);
         }
-        Notify("", "fd %d", fd);
-        printf("console %d\n", fd);
+        Notify("", "console fd %d", fd);
 #endif
         ftp_main();
-        return 0;
     }
     else
     {
