@@ -447,7 +447,9 @@ int ftp_cmd_LIST(ftp_env_t* env, const char* arg)
         }
 
         ftp_mode_string(statbuf.st_mode, modebuf);
-        LOCALTIME_R((const time_t*)&(statbuf.st_ctim), &tm);
+        // https://github.com/shahrilnet/remote_lua_loader/blob/f1be153946685439b60859ea196acf20c19382f5/payloads/ftp_server.lua#L479
+        const uintptr_t pSt = (uintptr_t)&statbuf;
+        LOCALTIME_R((const time_t*)(pSt+0x38), &tm);
         strftime(timebuf, sizeof(timebuf), "%b %d %H:%M", &tm);
         ftp_data_printf(env, "%s %lu %lu %lu %llu %s %s\r\n", modebuf, statbuf.st_nlink, statbuf.st_uid, statbuf.st_gid, statbuf.st_size, timebuf, ent->d_name);
     }
