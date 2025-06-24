@@ -1,6 +1,6 @@
 # ps4-hen-plugins
 
-Plugin system for Updated PS4 Homebrew Enabler [ps4-hen-vtx](https://github.com/EchoStretch/ps4-hen-vtx).
+Plugin system for Updated PS4 Homebrew Enabler [ps4-hen](https://github.com/Scene-Collective/ps4-hen).
 
 # Plugins
 
