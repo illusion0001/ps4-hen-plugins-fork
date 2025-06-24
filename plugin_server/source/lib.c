@@ -3,7 +3,7 @@
 #include "../../common/plugin_common.h"
 #include "../../common/notify.h"
 
-#include "extern/libjbc/libjbc.h"
+#include "../../extern/libjbc/libjbc.h"
 
 #include <pthread.h>
 #include <unistd.h>
