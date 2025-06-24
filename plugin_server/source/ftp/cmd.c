@@ -460,7 +460,8 @@ int ftp_cmd_LIST(ftp_env_t* env, const char* arg)
         const uintptr_t pSt = (uintptr_t)&statbuf;
         LOCALTIME_R((const time_t*)(pSt+0x38), &tm);
         strftime(timebuf, sizeof(timebuf), "%b %d %H:%M", &tm);
-        ftp_data_printf(env, "%s %lu %lu %lu %llu %s %s\r\n", modebuf, statbuf.st_nlink, statbuf.st_uid, statbuf.st_gid, statbuf.st_size, timebuf, ent->d_name);
+        const uint64_t st_size = *(uint64_t*)(pSt + 0x48);
+        ftp_data_printf(env, "%s %lu %lu %lu %llu %s %s\r\n", modebuf, 0, 0, 0, st_size, timebuf, ent->d_name);
     }
 
     if (ftp_data_close(env))
