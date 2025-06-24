@@ -42,3 +42,4 @@ Plugin system for Updated PS4 Homebrew Enabler [ps4-hen](https://github.com/Scen
 - [OpenOrbis Toolchain](https://github.com/OpenOrbis/OpenOrbis-PS4-Toolchain) for toolchain.
 - [klogsrv](https://github.com/ps5-payload-dev/klogsrv) for klog server.
 - [ftpsrv](https://github.com/ps5-payload-dev/ftpsrv) for FTP server.
+  - [libjbc](https://github.com/sleirsgoevy/ps4-libjbc) for process jailbreak and sandbox escape.
