@@ -1,12 +1,11 @@
 # Library metadata.
 
-DEBUG_FLAGS = -D__FINAL__=1
+DEBUG_FLAGS = -DLOG_PRINTF_TO_TTY=0
 LOG_TYPE = -D__USE_PRINTF__
 BUILD_TYPE = _final
 
 ifeq ($(DEBUG),1)
-    DEBUG_FLAGS = -D__FINAL__=0
-    BUILD_TYPE = _debug
+    DEBUG_FLAGS = -DLOG_PRINTF_TO_TTY=1
 endif
 
 TYPE         := $(BUILD_TYPE)

@@ -151,7 +151,12 @@ ftp_data_printf(ftp_env_t* env, const char* fmt, ...)
     vsnprintf(buf, sizeof(buf), fmt, args);
     va_end(args);
 
+#if LOG_PRINTF_TO_TTY
+    printf("[ftpsrv] %s", buf);
+#endif
+
     len = strlen(buf);
+
     if (write(env->data_fd, buf, len) != len)
     {
         return -1;
@@ -195,6 +200,10 @@ ftp_active_printf(ftp_env_t* env, const char* fmt, ...)
     va_start(args, fmt);
     vsnprintf(buf, sizeof(buf), fmt, args);
     va_end(args);
+
+#if LOG_PRINTF_TO_TTY
+    printf("[ftpsrv] %s", buf);
+#endif
 
     len = strlen(buf);
 
