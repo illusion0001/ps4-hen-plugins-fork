@@ -1,3 +1,5 @@
+#include "../../common/entry.h"
+
 #include <stdint.h>
 #include <stdio.h>
 #include "../../common/plugin_common.h"
@@ -71,7 +73,7 @@ void* pthread_ftp(void* args)
     return 0;
 }
 
-int plugin_load(int* argc, const char** argv)
+int plugin_load(struct SceEntry* args)
 {
     pthread_t pthrd = 0;
     pthread_t pthrd_ftp = 0;
