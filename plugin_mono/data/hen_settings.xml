@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<system_settings version="1.0" plugin="settings_root_plugin">
+  <setting_list id="id_hen_settings" title="★ HEN Settings" initial_focus_to="id_game_package_installer_hdd">
+    <setting_list id="payload_options" title="★ Payload Options (Restart Required)" initial_focus_to="settings_exploit_fixes">
+      <!-- The IDs must match ini keys! -->
+      <toggle_switch id="exploit_fixes" title="Enable exploit fixes" description="Attempts to repatch bad/missing patches that should have been made by the exploit.&#xa;This helps ensure system stability after the initial jailbreak process." value="0"/>
+      <toggle_switch id="mmap_patches" title="Enable memory mapping patches" description="Enable memory mapping patches for decrypting binary files.&#xa;These patches allow the system to properly handle encrypted executables and libraries." value="0"/>
+      <toggle_switch id="block_updates" title="Block firmware updates" description="Block console firmware updates by unmounting the `/update` partition.&#xa;This prevents accidental firmware updates that could patch the exploits." value="0" confirm="Are you sure you want to change this setting? Disabling might lead to accidental updates." confirm_phrase="Yes,No" />
+      <toggle_switch id="disable_aslr" title="Disable userland ASLR" description="Disable userland ASLR (Address Space Layout Randomization).&#xa;Disabling it can improve compatibility with homebrew applications, debuggers, and cheats." value="0"/>
+      <toggle_switch id="nobd_patches" title="Enable NoBD patches" description="NoBD (No Blu-ray Drive) patches - allows system updates without a working Blu-ray drive." value="0"/>
+    <list id="target_id" title="Target ID spoofer" description="Changes the console's reported Target ID for development or region-specific functionality.">
+      <list_item id="target_id_0x00" title="None" value="0"/>
+      <list_item id="target_id_0x80" title="Diagnostic" value="0x80"/>
+      <list_item id="target_id_0x81" title="Devkit" value="0x81"/>
+      <list_item id="target_id_0x82" title="Testkit" value="0x82"/>
+      <list_item id="target_id_0x83" title="Japan" value="0x83"/>
+      <list_item id="target_id_0x84" title="USA" value="0x84"/>
+      <list_item id="target_id_0x85" title="Europe" value="0x85"/>
+      <list_item id="target_id_0x86" title="Korea" value="0x86"/>
+      <list_item id="target_id_0x87" title="United Kingdom" value="0x87"/>
+      <list_item id="target_id_0x88" title="Mexico" value="0x88"/>
+      <list_item id="target_id_0x89" title="Australia &amp; New Zealand" value="0x89"/>
+      <list_item id="target_id_0x8A" title="South Asia" value="0x8A"/>
+      <list_item id="target_id_0x8B" title="Taiwan" value="0x8B"/>
+      <list_item id="target_id_0x8C" title="Russia" value="0x8C"/>
+      <list_item id="target_id_0x8D" title="China" value="0x8D"/>
+      <list_item id="target_id_0x8E" title="Hong Kong" value="0x8E"/>
+      <list_item id="target_id_0x8F" title="Brazil" value="0x8F"/>
+      <list_item id="target_id_0xA0" title="Kratos (Arcade Cabinet)" value="0xA0"/>
+    </list>
+      <toggle_switch id="skip_patches" title="Skip userland patches" description="Skip applying SceShellCore, SceShellUI, and RemotePlay patches.&#xa;Useful for testkit users." value="0"/>
+      <toggle_switch id="upload_prx" title="Write HEN plugin files to HDD" description="Write the default HEN plugin PRX files to the console's hard drive.&#xa;Enabling this is recommended for first-time setup." value="0"/>
+      <toggle_switch id="enable_plugins" title="Enable plugin system" description="Enable HEN plugin file loading and execution system.&#xa;This feature activates the plugin subsystem that allows loading of additional PRX modules to extend HEN's capabilities.&#xa;Such as this extended settings menu."  confirm="Are you sure you want to change this setting? If disabling will not allow the following features:&#xa;★ HEN Settings Menu&#xa;FTP Server&#xa;Kernel Log Server&#xa;Plugins load for apps" confirm_phrase="Yes,No" value="0"/>
+    </setting_list>
+    <link id="id_game_package_installer_hdd" title="Install Package from Hard Disk" description="Place package files into /data/pkg.&#xa;Recursive path not supported." file="PkgInstaller/data/pkginstaller_hdd.xml" />
+    <link id="id_game_package_installer_usb" title="Install Package from USB Storage" description="Place package files into root of USB Storage.&#xa;Recursive path not supported." file="PkgInstaller/data/pkginstaller_usb.xml" />
+    <!--
+    <button id="id_restart_shellui" title="Restart ShellUI" description="Restarts ShellUI."/>
+    -->
+  </setting_list>
+</system_settings>

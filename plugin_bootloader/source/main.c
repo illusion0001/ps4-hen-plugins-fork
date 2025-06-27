@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "entry.h"
 #include "plugin_common.h"
 #include "notify.h"
 
@@ -10,7 +11,7 @@ attr_public const char* g_pluginDesc = "Bootloader plugin.";
 attr_public const char* g_pluginAuth = "illusiony";
 attr_public uint32_t g_pluginVersion = 0x00000100;  // 1.00
 
-int32_t attr_public plugin_load(int32_t* argc, const char* argv[])
+int32_t attr_public plugin_load(struct SceEntry* args, const void* atexit_handler)
 {
     final_printf("%s Plugin Started.\n", g_pluginName);
     final_printf("<%s\\Ver.0x%08x> %s\n", g_pluginName, g_pluginVersion, __func__);
@@ -21,12 +22,12 @@ int32_t attr_public plugin_load(int32_t* argc, const char* argv[])
     const int m = sceKernelLoadStartModule(loader_path, 0, 0, 0, 0, 0);
     if (m > 0)
     {
-        int32_t (*load)(int*, const char**) = NULL;
+        int32_t (*load)(struct SceEntry*) = NULL;
         static const char loader_sym[] = "plugin_load";
         sceKernelDlsym(m, loader_sym, (void**)&load);
         if (load)
         {
-            load(argc, argv);
+            load(args);
         }
         else
         {

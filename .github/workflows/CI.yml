@@ -56,9 +56,10 @@ jobs:
     - name: Build loader
       run: make -C plugin_loader
 
-    - name: Build samples
+    - name: Build modules
       run: |
         make -C plugin_example
+        make -C plugin_mono
         make -C plugin_server
 
     - name: Zip
