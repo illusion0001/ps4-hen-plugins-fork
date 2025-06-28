@@ -19,7 +19,7 @@ TARGETSTUB   := $(OUTPUT_PRX).so
 COMMON_DIR    := ../common
 
 # Libraries linked into the ELF.
-LIBS := -lSceLibcInternal -lkernel -lc -lc++
+LIBS := -lSceLibcInternal -lkernel
 
 EXTRAFLAGS := $(DEBUG_FLAGS) $(LOG_TYPE) -fcolor-diagnostics -Wall
 
