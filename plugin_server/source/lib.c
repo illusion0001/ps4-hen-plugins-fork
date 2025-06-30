@@ -73,7 +73,7 @@ void* pthread_ftp(void* args)
     return 0;
 }
 
-int plugin_load(struct SceEntry* args)
+attr_public int plugin_load(struct SceEntry* args)
 {
     pthread_t pthrd = 0;
     pthread_t pthrd_ftp = 0;

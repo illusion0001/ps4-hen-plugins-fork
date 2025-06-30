@@ -20,7 +20,7 @@ attr_public uint32_t g_pluginVersion = 0x00000100;  // 1.00
 
 static void* app_exe = 0;
 
-int plugin_load(struct SceEntry* args)
+attr_public int plugin_load(struct SceEntry* args)
 {
 
     Notify("", "Notify 0x%lx\n", (uintptr_t)sceKernelSendNotificationRequest);
