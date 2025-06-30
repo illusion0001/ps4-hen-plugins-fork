@@ -21,7 +21,7 @@ COMMON_DIR    := ../common
 # Libraries linked into the ELF.
 LIBS := -lSceLibcInternal -lkernel -lScePsm -lmonosgen -lSceRegMgr
 
-EXTRAFLAGS := -fshort-wchar $(DEBUG_FLAGS) $(LOG_TYPE) -fcolor-diagnostics -Wall -Wno-unused-function -Wno-unused-const-variable
+EXTRAFLAGS := -fvisibility=hidden -fshort-wchar $(DEBUG_FLAGS) $(LOG_TYPE) -fcolor-diagnostics -Wall -Wno-unused-function -Wno-unused-const-variable
 
 # You likely won't need to touch anything below this point.
 # Root vars

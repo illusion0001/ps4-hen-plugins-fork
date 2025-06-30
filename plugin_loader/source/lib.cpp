@@ -8,7 +8,7 @@ attr_public const char* g_pluginDesc = "Plugin loader.";
 attr_public const char* g_pluginAuth = "illusiony";
 attr_public uint32_t g_pluginVersion = 0x00000100;  // 1.00
 
-extern "C" int plugin_load(SceEntry* args, const void* atexit_handler)
+extern "C" attr_public int plugin_load(SceEntry* args, const void* atexit_handler)
 {
     return 0;
 }
