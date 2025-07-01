@@ -2,11 +2,9 @@
 
 DEBUG_FLAGS = -D__FINAL__=1
 LOG_TYPE = -D__USE_PRINTF__
-BUILD_TYPE = _final
 
 ifeq ($(DEBUG),1)
     DEBUG_FLAGS = -D__FINAL__=0
-    BUILD_TYPE = _debug
 endif
 
 TYPE         := $(BUILD_TYPE)
