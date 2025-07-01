@@ -2,7 +2,6 @@
 
 DEBUG_FLAGS = -DLOG_PRINTF_TO_TTY=0
 LOG_TYPE = -D__USE_PRINTF__
-BUILD_TYPE = _final
 
 ifeq ($(DEBUG),1)
     DEBUG_FLAGS = -DLOG_PRINTF_TO_TTY=1
@@ -82,6 +81,9 @@ $(INTDIR)/%.o: $(PROJDIR)/%.c
 $(INTDIR)/%.o: $(PROJDIR)/%.cpp
 	@mkdir -p $(dir $@)
 	$(CCX) $(CXXFLAGS) -o $@ $<
+
+send: $(TARGET)
+	curl -T $(TARGET).prx ftp://$(PS4_HOST):2121/data/$(OUTPUT_PRX).prx
 
 libjbc:
 	make -C ../extern/libjbc install
