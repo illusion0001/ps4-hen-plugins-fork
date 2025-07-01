@@ -2,11 +2,9 @@
 
 DEBUG_FLAGS = -D__FINAL__=1
 LOG_TYPE = -D__USE_PRINTF__
-BUILD_TYPE = _final
 
 ifeq ($(DEBUG),1)
     DEBUG_FLAGS = -D__FINAL__=0
-    BUILD_TYPE = _debug
 endif
 
 TYPE         := $(BUILD_TYPE)
@@ -85,6 +83,9 @@ $(INTDIR)/%.o.stub: $(PROJDIR)/%.c
 
 $(INTDIR)/%.o.stub: $(PROJDIR)/%.cpp
 	$(CCX) -target x86_64-pc-linux-gnu -ffreestanding -nostdlib -fno-builtin -fPIC $(O_FLAG) -s -c -o $@ $<
+
+send: $(TARGET)
+	curl -T $(TARGET).prx ftp://$(PS4_HOST):2121/data/$(OUTPUT_PRX).prx
 
 build-info:
 	$(shell echo "#define GIT_COMMIT \"$(shell git rev-parse HEAD)\"" > $(COMMON_DIR)/git_ver.h)
