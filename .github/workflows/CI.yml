@@ -72,7 +72,7 @@ jobs:
       with:
         path: ${{ env.hen_path }}
         repository: illusion0001/ps4-hen-fork
-        ref: shellui
+        ref: shellui-2
 
     - name: Copy plugins
       working-directory: ${{ env.hen_path }}
