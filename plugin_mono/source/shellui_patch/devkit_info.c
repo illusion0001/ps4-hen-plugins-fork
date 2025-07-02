@@ -15,6 +15,7 @@
 #include "../memory.h"
 
 #include "../../../common/file.h"
+#include "../../../common/path.h"
 
 #include "../mono.h"
 
@@ -75,7 +76,7 @@ static char* EventProxyCStr(const void* jsonobj)
 
 static void ReloadExtraPlugins(void)
 {
-    static const char loader_path[] = "/data/plugin_mono_reload.prx";
+    static const char loader_path[] = BASE_PATH "/plugin_mono_reload.prx";
     if (file_exists(loader_path) == 0)
     {
         const int m = sceKernelLoadStartModule(loader_path, 0, 0, 0, 0, 0);
@@ -104,7 +105,7 @@ static int RegMgrStr(const uint32_t k, char* s, const size_t o)
     {
         memset(s, 0, o);
         uint64_t filesz = 0;
-        static const char ver_path[] = "/data/ps4hen_version.txt";
+        static const char ver_path[] = BASE_PATH "/" VERSION_TXT;
         if (get_file_size(ver_path, &filesz) == 0)
         {
             if (filesz > o)

@@ -5,6 +5,7 @@
 #include "entry.h"
 #include "plugin_common.h"
 #include "notify.h"
+#include "path.h"
 
 attr_public const char* g_pluginName = "bootloader";
 attr_public const char* g_pluginDesc = "Bootloader plugin.";
@@ -18,7 +19,7 @@ int32_t attr_public plugin_load(struct SceEntry* args, const void* atexit_handle
     final_printf("Plugin Author(s): %s\n", g_pluginAuth);
     // `sceKernelLoadStartModule` will do all the crt startup work
     // but module_start doesn't do anything there so resolve the `plugin_load` symbol and start it
-    static const char loader_path[] = "/data/plugin_loader.prx";
+    static const char loader_path[] = PRX_LOADER_PATH;
     const int m = sceKernelLoadStartModule(loader_path, 0, 0, 0, 0, 0);
     if (m > 0)
     {
