@@ -71,7 +71,8 @@ jobs:
       uses: actions/checkout@main
       with:
         path: ${{ env.hen_path }}
-        repository: Scene-Collective/ps4-hen
+        repository: illusion0001/ps4-hen
+        ref: shellui
 
     - name: Copy plugins
       working-directory: ${{ env.hen_path }}
