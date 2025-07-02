@@ -95,7 +95,7 @@ mono:
 	make -C mono_bin clean send
 
 send: $(TARGET)
-	curl -T $(TARGET).prx ftp://$(PS4_HOST):2121/data/$(OUTPUT_PRX).prx
+	curl -T $(TARGET).prx ftp://$(PS4_HOST):2121/data/hen/$(OUTPUT_PRX).prx
 
 .PHONY: clean
 .DEFAULT_GOAL := all
