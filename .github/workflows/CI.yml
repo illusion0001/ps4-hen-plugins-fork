@@ -76,7 +76,8 @@ jobs:
     - name: Copy plugins
       working-directory: ${{ env.hen_path }}
       run: |
-        mkdir tmp
+        mkdir -p tmp
+        touch tmp/plugins.zip
         cp -v ../bin/plugins/prx/* tmp/
 
     - name: Build with PS4 Payload SDK
