@@ -444,7 +444,7 @@ uintptr_t pid_chunk_scan(const int pid, const uintptr_t mem_start, const uintptr
     uint8_t mem[chunk_size];
     for (size_t i = 0; i < (mem_start - chunk_size); i += chunk_size)
     {
-        if (i % (chunk_size * 8))
+        if (0 && i % (chunk_size * 8))
         {
             debug_printf("scanning pid %d (%lu/%lu) mem 0x%p\n", pid, i, mem_start, mem);
         }
@@ -478,29 +478,35 @@ uintptr_t pid_chunk_scan(const int pid, const uintptr_t mem_start, const uintptr
 
 uintptr_t* findSymbolPtrInEboot(const char* module, const char* symbol_name)
 {
+    here();
     uintptr_t symbol = 0;
     if (!symbol_name)
     {
         return 0;
     }
     {
+    here();
         const int handle = sceKernelLoadStartModule(module, 0, 0, 0, 0, 0);
         printf("%s load 0x%08x\n", module, handle);
         if (handle > 0)
         {
+    here();
             sceKernelDlsym(handle, symbol_name, (void**)&symbol);
-            printf("symbol %s resolved to %lx (real %lx)\n", symbol_name, symbol, *(uintptr_t*)0x00f3a9e8);
+            //printf("symbol %s resolved to %lx (real %lx)\n", symbol_name, symbol, *(uintptr_t*)0x00f3a9e8);
         }
+    here();
     }
     if (!symbol)
     {
         return 0;
     }
+    here();
     struct OrbisKernelModuleInfo info = {0};
     info.size = sizeof(info);
     const int r = sceKernelGetModuleInfo(0, &info);
     printf("sceKernelGetModuleInfoEx 0x%08x\n", r);
     uintptr_t* p = 0;
+    here();
     if (r == 0)
     {
         const uint32_t mm = 0;
@@ -520,6 +526,7 @@ uintptr_t* findSymbolPtrInEboot(const char* module, const char* symbol_name)
             printf("found %s at 0x%p -> 0x%lx\n", symbol_name, p, symbol);
         }
     }
+    here();
     return p;
 }
 
