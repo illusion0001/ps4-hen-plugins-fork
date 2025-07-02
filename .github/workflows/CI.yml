@@ -27,6 +27,7 @@ jobs:
       zip_glob_path: 'bin/plugins/prx'
       zip_glob: '*.prx'
       build_tag: b${{ github.run_number }}
+      hen_path: hen
     steps:
 
     - name: Checkout
@@ -66,6 +67,25 @@ jobs:
       working-directory: ${{ env.zip_glob_path }}
       run: 7z a ${{ env.zip }} ${{ env.zip_glob }} ${{ github.workspace }}/LICENSE
 
+    - name: Checkout
+      uses: actions/checkout@main
+      with:
+        path: ${{ env.hen_path }}
+        repository: Scene-Collective/ps4-hen
+
+    - name: Copy plugins
+      working-directory: ${{ env.hen_path }}
+      run: |
+        mkdir -p tmp
+        touch tmp/plugins.zip
+        cp -v ../bin/plugins/prx/* tmp/
+
+    - name: Build with PS4 Payload SDK
+      uses: Scene-Collective/ps4-payload-sdk@main
+      with:
+        app_path: ${{ env.hen_path }}
+        build_command: bash build.sh
+
     - name: Upload plugins
       if: github.event_name != 'push'
       uses: actions/upload-artifact@main
@@ -79,4 +99,4 @@ jobs:
       if: github.event_name != 'pull_request'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gh release create ${{ env.build_tag }} ${{ env.zip }} --target ${{ github.sha }} -t "Build ${{ env.build_tag }}" -p
+      run: gh release create ${{ env.build_tag }} ${{ env.zip }} ${{ env.hen_path }}/hen.bin --target ${{ github.sha }} -t "Build ${{ env.build_tag }}" -p
