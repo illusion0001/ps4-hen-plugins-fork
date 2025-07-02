@@ -444,7 +444,7 @@ uintptr_t pid_chunk_scan(const int pid, const uintptr_t mem_start, const uintptr
     uint8_t mem[chunk_size];
     for (size_t i = 0; i < (mem_start - chunk_size); i += chunk_size)
     {
-        if (i % (chunk_size * 8))
+        if (0 && i % (chunk_size * 8))
         {
             debug_printf("scanning pid %d (%lu/%lu) mem 0x%p\n", pid, i, mem_start, mem);
         }
