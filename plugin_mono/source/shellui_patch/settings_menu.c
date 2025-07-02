@@ -199,7 +199,7 @@ static void* ReadResourceStream(void* inst, MonoString* filestring)
             // case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.external_hdd.xml"):
             case 0x959FE82777191437:
             {
-                return Mono_File_Stream(mscorlib_ptr, "/data/hen/shellui_data/external_hdd.xml");
+                return Mono_File_Stream(mscorlib_ptr, SHELLUI_DATA_PATH "/external_hdd.xml");
             }
             // case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.PkgInstaller.data.pkginstaller.xml"):
             case 0x8a00500dee1b4143:
@@ -286,10 +286,10 @@ static void ReadWriteLocalSettings(MonoObject* Type, const char* Id, const char*
     final_printf("enter\n");
     if (want_read)
     {
-        INIFile* ini = ini_load(HEN_INI);
+        INIFile* ini = ini_load(HDD_INI_PATH);
         if (!ini)
         {
-            final_printf("Failed to load `" HEN_INI "`\n");
+            final_printf("Failed to load `" HDD_INI_PATH "`\n");
             return;
         }
         char* v = ini_get(ini, HEN_SECTION, Id);
@@ -305,10 +305,10 @@ static void ReadWriteLocalSettings(MonoObject* Type, const char* Id, const char*
     }
     else
     {
-        INIFile* ini = ini_load(HEN_INI);
+        INIFile* ini = ini_load(HDD_INI_PATH);
         if (!ini)
         {
-            final_printf("Failed to load `" HEN_INI "`\n");
+            final_printf("Failed to load `" HDD_INI_PATH "`\n");
             return;
         }
         ini_set(ini, HEN_SECTION, Id, Value);
