@@ -13,6 +13,8 @@
 #define debug_printf(a, args...) printf("[%s] (%s:%d) " a, __func__, __FILE__, __LINE__, ##args)
 #endif
 
+#define here() debug_printf("%s\n", "reached")
+
 #define final_printf(a, args...) printf("(%s:%d) " a, __FILE__, __LINE__, ##args)
 
 // Takes hardcoded input string 2 to strlen against during compile time.

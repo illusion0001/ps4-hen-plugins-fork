@@ -14,6 +14,7 @@
 #include <stddef.h>
 
 #include "../ini.h"
+#include "../hen_settings.inc.c"
 
 #define _countof(a) sizeof(a) / sizeof(*a)
 
@@ -169,6 +170,10 @@ static void* ReadResourceStream(void* inst, MonoString* filestring)
                 mscorlib_ptr = mono_get_image(mscorlib_sprx);
             }
         }
+        if (!mscorlib_ptr)
+        {
+            return ReadResourceStream_Original.ptr(inst, filestring);
+        }
         const uint64_t s = wSID(filestring->str);
         printf("SID: 0x%lx\n", s);
         switch (s)
@@ -194,7 +199,7 @@ static void* ReadResourceStream(void* inst, MonoString* filestring)
             // case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.hen_settings.xml"):
             case 0xE6168C18F98D1DF6:
             {
-                return Mono_File_Stream(mscorlib_ptr, SHELLUI_HEN_SETTINGS);
+                return file_exists(SHELLUI_HEN_SETTINGS) == 0 ? Mono_File_Stream(mscorlib_ptr, SHELLUI_HEN_SETTINGS) : Mono_New_Stream(mscorlib_ptr, data_hen_settings_xml, data_hen_settings_xml_len);
             }
             // case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.external_hdd.xml"):
             case 0x959FE82777191437:
