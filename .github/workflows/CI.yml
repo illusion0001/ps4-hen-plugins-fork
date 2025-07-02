@@ -78,7 +78,9 @@ jobs:
       working-directory: ${{ env.hen_path }}
       run: |
         mkdir -p tmp
-        cp -v ${{ env.zip }} tmp/plugins.zip
+        f=tmp/plugins.zip
+        cp -v ${{ env.zip }} $f
+        unzip $f
 
     - name: Build with PS4 Payload SDK
       uses: Scene-Collective/ps4-payload-sdk@main
