@@ -77,8 +77,10 @@ jobs:
     - name: Copy plugins
       working-directory: ${{ env.hen_path }}
       run: |
-        mkdir -p tmp
-        f=tmp/plugins.zip
+        t=tmp
+        f=plugins.zip
+        mkdir -p $t
+        cd $t
         cp -v ${{ env.zip }} $f
         unzip $f
 
