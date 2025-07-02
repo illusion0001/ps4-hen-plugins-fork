@@ -36,6 +36,13 @@ jobs:
         fetch-depth: 0
         submodules: recursive
 
+    - name: Checkout hen
+      uses: actions/checkout@main
+      with:
+        path: ${{ env.hen_path }}
+        repository: illusion0001/ps4-hen-fork
+        ref: 69eee80632dfe85aa6500160450a57959216ba39
+
     - name: Setup variables
       run: |
         sudo apt install llvm lld
@@ -66,13 +73,6 @@ jobs:
     - name: Zip
       working-directory: ${{ env.zip_glob_path }}
       run: 7z a ${{ env.zip }} ${{ env.zip_glob }} ${{ github.workspace }}/LICENSE
-
-    - name: Checkout hen
-      uses: actions/checkout@main
-      with:
-        path: ${{ env.hen_path }}
-        repository: illusion0001/ps4-hen-fork
-        ref: 69eee80632dfe85aa6500160450a57959216ba39
 
     - name: Copy plugins
       working-directory: ${{ env.hen_path }}
