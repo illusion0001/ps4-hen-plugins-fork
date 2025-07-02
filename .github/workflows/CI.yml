@@ -78,7 +78,6 @@ jobs:
       working-directory: ${{ env.hen_path }}
       run: |
         mkdir -p tmp
-        touch tmp/plugins.zip
         cp -v ../bin/plugins/prx/* tmp/
 
     - name: Build with PS4 Payload SDK
@@ -95,6 +94,7 @@ jobs:
         path: |
           ${{ github.workspace }}/${{ env.zip_glob_path }}/${{ env.zip_glob }}
           ${{ github.workspace }}/LICENSE
+          ${{ env.hen_path }}/hen.bin
 
     - name: Release
       if: github.event_name != 'pull_request'
