@@ -60,7 +60,7 @@ jobs:
     - name: Build modules
       run: |
         make -C plugin_example
-        make -C plugin_mono
+        make -C plugin_mono DEBUG=1
         make -C plugin_server
 
     - name: Zip
