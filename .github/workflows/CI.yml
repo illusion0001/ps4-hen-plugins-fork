@@ -67,11 +67,11 @@ jobs:
       working-directory: ${{ env.zip_glob_path }}
       run: 7z a ${{ env.zip }} ${{ env.zip_glob }} ${{ github.workspace }}/LICENSE
 
-    - name: Checkout
+    - name: Checkout hen
       uses: actions/checkout@main
       with:
         path: ${{ env.hen_path }}
-        repository: illusion0001/ps4-hen
+        repository: illusion0001/ps4-hen-fork
         ref: shellui
 
     - name: Copy plugins
