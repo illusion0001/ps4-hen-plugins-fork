@@ -57,6 +57,7 @@ jobs:
         tar -xzf toolchain-llvm-18.tar.gz -C ./
         ls .
         echo "OO_PS4_TOOLCHAIN=$PWD/OpenOrbis/PS4Toolchain" >> $GITHUB_ENV
+        python3 int3.py 4096 > common/cave.inc.c
 
     - name: Build bootloader
       run: make -C plugin_bootloader
