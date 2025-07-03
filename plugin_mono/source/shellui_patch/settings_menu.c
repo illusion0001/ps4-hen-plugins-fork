@@ -204,6 +204,7 @@ static void* ReadResourceStream(void* inst, MonoString* filestring)
                 debug_printf("ReadResourceStream_Original 0x%lx\n", ReadResourceStream_Original.addr);
                 void* stream = ReadResourceStream_Original.ptr(inst, filestring);
                 here();
+                debug_printf("stream 0x%p\n", stream);
                 // must be utf8 with bom, parser doesn't like utf16
                 const char* xml = Mono_Read_Stream(Root_Domain, mscorlib_ptr, stream);
                 here();
