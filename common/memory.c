@@ -619,9 +619,10 @@ static void CaveBlockInit(void)
     static bool once = false;
     if (!once)
     {
-        g_cavePad = mmap(0, MAX_CAVE_SIZE, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        g_cavePad = mmap(0, MAX_CAVE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
         if (g_cavePad != MAP_FAILED)
         {
+            sceKernelMprotect(g_cavePad, MAX_CAVE_SIZE, 7);
             static const uint8_t m[] = {0xB8, 0x01, 0x00, 0x00, 0x00, 0xC3};
             int (*test)(void);
             test = (void*)g_cavePad;
@@ -632,10 +633,6 @@ static void CaveBlockInit(void)
             // VirtualProtect(cavePad, cavePadSize, PAGE_EXECUTE_WRITECOPY, &temp);
             g_caveValid = once = true;
             printf("cavePad setup at 0x%p! Size %ld\n", g_cavePad, MAX_CAVE_SIZE);
-        }
-        else
-        {
-            printf("Failed to allocate code cave memory\n");
         }
     }
 }
