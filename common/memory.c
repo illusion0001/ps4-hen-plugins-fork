@@ -617,8 +617,13 @@ static void CaveBlockInit(uint8_t* cavePad, const size_t cavePadSize)
     static bool once = false;
     if (!once)
     {
-        memset(cavePad, 0xcc, cavePadSize);
         sceKernelMprotect(cavePad, sizeof(cavePad), 7);
+        static const uint8_t m[] = {0xB8, 0x01, 0x00, 0x00, 0x00, 0xC3};
+        int (*test)(void);
+        test = (void*)cavePad;
+        memcpy(cavePad, m, sizeof(m));
+        final_printf("checking executable code, it returned %d\n", test());
+        memset(cavePad, 0xcc, cavePadSize);
         // DWORD temp = caveInstSize = 0;
         // VirtualProtect(cavePad, cavePadSize, PAGE_EXECUTE_WRITECOPY, &temp);
         once = true;
@@ -657,6 +662,7 @@ uintptr_t CreatePrologueHook(uint8_t* cavePad, const size_t cavePadSize, const u
     const uintptr_t caveAddr = ucavePad + caveInstSize;
     caveInstSize += int_size + (sizeof(JMPstub) + sizeof(uintptr_t));
     printf("New caveInstSize: %ld\n", caveInstSize);
+    hex_dump(caveAddr, caveInstSize, caveAddr);
     return caveAddr;
 }
 
