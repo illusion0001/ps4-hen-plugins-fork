@@ -21,7 +21,7 @@ attr_public const char* g_pluginVersion = "Git Commit: " GIT_COMMIT
 int32_t attr_public plugin_load(struct SceEntry* args, const void* atexit_handler)
 {
     final_printf("%s Plugin Started.\n", g_pluginName);
-    final_printf("<%s\\Ver.0x%08x> %s\n", g_pluginName, g_pluginVersion, __func__);
+    final_printf("%s\n", g_pluginVersion);
     final_printf("Plugin Author(s): %s\n", g_pluginAuth);
     // `sceKernelLoadStartModule` will do all the crt startup work
     // but module_start doesn't do anything there so resolve the `plugin_load` symbol and start it
