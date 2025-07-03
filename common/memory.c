@@ -617,7 +617,7 @@ static void CaveBlockInit(uint8_t* cavePad, const size_t cavePadSize)
     static bool once = false;
     if (!once)
     {
-        sceKernelMprotect(cavePad, sizeof(cavePad), 7);
+        sceKernelMprotect(cavePad, cavePadSize, 7);
         static const uint8_t m[] = {0xB8, 0x01, 0x00, 0x00, 0x00, 0xC3};
         int (*test)(void);
         test = (void*)cavePad;
