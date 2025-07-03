@@ -442,11 +442,11 @@ uintptr_t pid_chunk_scan(const int pid, const uintptr_t mem_start, const uintptr
 #define chunk_size (8ul * 1024)
     uintptr_t found = 0;
     uint8_t mem[chunk_size];
-    for (size_t i = 0; i < (mem_start - chunk_size); i += chunk_size)
+    for (size_t i = 0; i < (mem_sz - chunk_size); i += chunk_size)
     {
         if (0 && i % (chunk_size * 8))
         {
-            debug_printf("scanning pid %d (%lu/%lu) mem 0x%p\n", pid, i, mem_start, mem);
+            debug_printf("scanning pid %d (%lu/%lu) mem 0x%p\n", pid, i, mem_sz, mem);
         }
         const uintptr_t chunk_start = mem_start + i;
         sys_proc_rw(pid, chunk_start, (const void*)mem, chunk_size, 0);
