@@ -32,7 +32,7 @@ bool g_only_hdd = false;
 
 static void PkgInstallerSearchDir(void* _this, MonoString* str, MonoString* str2)
 {
-    const uint64_t disc_sid = 0xE992CF1CBC039673; // wSID(L"/disc");
+    const uint64_t disc_sid = 0xE992CF1CBC039673;  // wSID(L"/disc");
     if (wSID(str->str) == disc_sid && g_only_hdd)
     {
         // search local hdd path
@@ -53,7 +53,7 @@ static int _DownloadRegisterTaskByStorageEx(void* bgft_params, int32_t* refout)
 {
     struct bgft_mono
     {
-        void* pad[2]; // user id and id str
+        void* pad[2];  // user id and id str
         MonoString* content_url;
     };
     struct bgft_mono* bgft_params_u64 = (struct bgft_mono*)bgft_params;
@@ -126,7 +126,7 @@ void UploadNewPkgInstallerPath(void* app_exe)
     if (SearchDir)
     {
         final_printf("SeachDir 0x%lx\n", SearchDir);
-        const uintptr_t pHook = CreatePrologueHook(cavePad, sizeof(cavePad), SearchDir, 15);
+        const uintptr_t pHook = CreatePrologueHook(SearchDir, 15);
         if (pHook)
         {
             PkgInstallerSearchDir_Original.addr = pHook;
