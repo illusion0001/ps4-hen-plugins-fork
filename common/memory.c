@@ -612,7 +612,7 @@ static size_t GetInstructionSize(uint64_t Address, size_t MinSize)
 // Allocation-less version of a Prologue hook
 // I use pre-allocated `returnPad`, copy instructions to it and write instructions to it
 static size_t caveInstSize = 0;
-static void CaveBlockInit(uint8_t* cavePad, const size_t cavePadSize)
+static void CaveBlockInit(void)
 {
     static bool once = false;
     if (!once)
@@ -620,17 +620,17 @@ static void CaveBlockInit(uint8_t* cavePad, const size_t cavePadSize)
         const int pid = getpid();
         //sceKernelMprotect(cavePad, cavePadSize, 7);
         static const uint8_t m[] = {0xB8, 0x01, 0x00, 0x00, 0x00, 0xC3};
-        sys_proc_rw(pid, (uintptr_t)cavePad, m, sizeof(m), 1);
+        sys_proc_rw(pid, (uintptr_t)cavePadFunc, m, sizeof(m), 1);
         int (*test)(void);
-        test = (void*)cavePad;
+        test = (void*)cavePadFunc;
         //memcpy(cavePad, m, sizeof(m));
         final_printf("checking executable code, it returned %d\n", test());
-        sys_proc_memset(pid, (uintptr_t)cavePad, 0xcc, MAX_CAVE_SIZE);
+        sys_proc_memset(pid, (uintptr_t)cavePadFunc, 0xcc, MAX_CAVE_SIZE);
         //memset(cavePad, 0xcc, cavePadSize);
         // DWORD temp = caveInstSize = 0;
         // VirtualProtect(cavePad, cavePadSize, PAGE_EXECUTE_WRITECOPY, &temp);
         once = true;
-        printf("cavePad setup at 0x%p! Size %ld\n", cavePad, cavePadSize);
+        printf("cavePad setup at 0x%p! Size %ld\n", (void*)cavePadFunc, MAX_CAVE_SIZE);
     }
 }
 static bool validnateBlockSize(const size_t cavePadSize, const size_t newSize)
@@ -642,20 +642,20 @@ static bool validnateBlockSize(const size_t cavePadSize, const size_t newSize)
     }
     return 1;
 }
-uintptr_t CreatePrologueHook(uint8_t* cavePad, const size_t cavePadSize, const uintptr_t address, const int min_instruction_size)
+uintptr_t CreatePrologueHook(const uintptr_t address, const int min_instruction_size)
 {
-    CaveBlockInit(cavePad, cavePadSize);
+    CaveBlockInit();
     if (!address || min_instruction_size < 5)
     {
         return 0;
     }
     const size_t int_size = GetInstructionSize(address, min_instruction_size);
-    if (!int_size || !validnateBlockSize(cavePadSize, caveInstSize + int_size + sizeof(JMPstub)))
+    if (!int_size || !validnateBlockSize(MAX_CAVE_SIZE, caveInstSize + int_size + sizeof(JMPstub)))
     {
         return 0;
     }
     const size_t addroffset = sizeof(JMPstub);
-    const uintptr_t ucavePad = (uintptr_t)cavePad;
+    const uintptr_t ucavePad = (uintptr_t)cavePadFunc;
     const uintptr_t ucavePadNew = ucavePad + caveInstSize;
     const uintptr_t retaddr = address + int_size;
     const int pid = getpid();
