@@ -617,13 +617,16 @@ static void CaveBlockInit(uint8_t* cavePad, const size_t cavePadSize)
     static bool once = false;
     if (!once)
     {
-        sceKernelMprotect(cavePad, cavePadSize, 7);
+        const int pid = getpid();
+        //sceKernelMprotect(cavePad, cavePadSize, 7);
         static const uint8_t m[] = {0xB8, 0x01, 0x00, 0x00, 0x00, 0xC3};
+        sys_proc_rw(pid, (uintptr_t)cavePad, m, sizeof(m), 1);
         int (*test)(void);
         test = (void*)cavePad;
-        memcpy(cavePad, m, sizeof(m));
+        //memcpy(cavePad, m, sizeof(m));
         final_printf("checking executable code, it returned %d\n", test());
-        memset(cavePad, 0xcc, cavePadSize);
+        sys_proc_memset(pid, (uintptr_t)cavePad, 0xcc, MAX_CAVE_SIZE);
+        //memset(cavePad, 0xcc, cavePadSize);
         // DWORD temp = caveInstSize = 0;
         // VirtualProtect(cavePad, cavePadSize, PAGE_EXECUTE_WRITECOPY, &temp);
         once = true;

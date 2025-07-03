@@ -9,7 +9,7 @@
 #define MAX_CAVE_SIZE 4096
 #endif
 
-static uint8_t cavePad[MAX_CAVE_SIZE] = {};
+static __attribute__((section(".text"))) uint8_t cavePad[MAX_CAVE_SIZE] = {};
 
 /*
  * @brief Scan for a given byte pattern on a module
