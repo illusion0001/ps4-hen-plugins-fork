@@ -129,21 +129,28 @@ static void SetupSettingsRoot(const char* xml)
 {
     char buf[MAX_BUF] = {};
     char buf2[MAX_BUF] = {};
+    here();
+    printf("xml:\n%s\n", xml);
+    here();
 #undef MAX_BUF
     memset(buf_fixed, 0, sizeof(buf_fixed));
+    here();
     str_replace(xml,
                 "\t\t<link id=\"sandbox\" title=\"Sandbox\" file=\"Sandbox/sandbox.xml\" />\r\n",
                 "\t\t<link id=\"hen_settings\" title=\"★ HEN Settings\" file=\"hen_settings.xml\" />\r\n",
                 buf,
                 _countof(buf),
                 ADD_BEFORE);
+    here();
     strncat(buf2, buf, strlen(buf));
+    here();
     str_replace(buf,
                 "initial_focus_to=\"psn\">\r\n",
                 "initial_focus_to=\"hen_settings\">\r\n",
                 buf2,
                 _countof(buf2),
                 REPLACE_LINE);
+    here();
     //printf("New str:\n%s\n", buf2);
     mono_free(xml);
     memset(buf, 0, sizeof(buf));
@@ -152,6 +159,7 @@ static void SetupSettingsRoot(const char* xml)
     strncat(buf, buf2, strlen(buf2));
     strncpy(buf_fixed, buf, strlen(buf));
     buflen = strlen(buf_fixed);
+    here();
 }
 
 uiTYPEDEF_FUNCTION_PTR(void*, ReadResourceStream_Original, void* inst, void* string);
@@ -161,22 +169,30 @@ static void* ReadResourceStream(void* inst, MonoString* filestring)
     printf("%s (%ls)\n", __FUNCTION__, filestring->str);
     {
         static void* mscorlib_ptr = 0;
+        here();
         if (!mscorlib_ptr)
         {
+            here();
             char mscorlib_sprx[260] = {};
             const char* sandbox_path = sceKernelGetFsSandboxRandomWord();
+            here();
             if (sandbox_path)
             {
+                here();
                 snprintf(mscorlib_sprx, sizeof(mscorlib_sprx), "/%s/common/lib/mscorlib.dll", sandbox_path);
                 mscorlib_ptr = mono_get_image(mscorlib_sprx);
+                here();
             }
         }
         if (!mscorlib_ptr)
         {
+            here();
             return ReadResourceStream_Original.ptr(inst, filestring);
         }
+        here();
         const uint64_t s = wSID(filestring->str);
         printf("SID: 0x%lx\n", s);
+        here();
         switch (s)
         {
             // c23 doesn't support function constexpr yet
@@ -184,15 +200,20 @@ static void* ReadResourceStream(void* inst, MonoString* filestring)
             // case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.SettingsRoot.data.settings_root.xml"):
             case 0x625E2DDDEC3244C2:
             {
+                here();
                 void* stream = ReadResourceStream_Original.ptr(inst, filestring);
                 // must be utf8 with bom, parser doesn't like utf16
                 const char* xml = Mono_Read_Stream(Root_Domain, mscorlib_ptr, stream);
+                here();
                 if (xml)
                 {
+                    here();
                     if (buf_fixed[0] != '\xEF')
                     {
+                        here();
                         SetupSettingsRoot(xml);
                     }
+                    here();
                     return Mono_New_Stream(mscorlib_ptr, buf_fixed, buflen);
                 }
                 break;
@@ -200,11 +221,13 @@ static void* ReadResourceStream(void* inst, MonoString* filestring)
             // case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.hen_settings.xml"):
             case 0xE6168C18F98D1DF6:
             {
+                here();
                 return file_exists(SHELLUI_HEN_SETTINGS) == 0 ? Mono_File_Stream(mscorlib_ptr, SHELLUI_HEN_SETTINGS) : Mono_New_Stream(mscorlib_ptr, data_hen_settings_xml, data_hen_settings_xml_len);
             }
             // case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.external_hdd.xml"):
             case 0x959FE82777191437:
             {
+                here();
                 return Mono_File_Stream(mscorlib_ptr, SHELLUI_DATA_PATH "/external_hdd.xml");
             }
             // case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.PkgInstaller.data.pkginstaller.xml"):
@@ -214,12 +237,14 @@ static void* ReadResourceStream(void* inst, MonoString* filestring)
             // case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.PkgInstaller.data.pkginstaller_hdd.xml"):
             case 0xf3591e9176d4dd3c:
             {
+                here();
                 extern bool g_only_hdd;
                 g_only_hdd = s == 0xf3591e9176d4dd3c;
                 return ReadResourceStream_Original.ptr(inst, Mono_New_String("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.PkgInstaller.data.pkginstaller.xml"));
             }
         }
     }
+    here();
     return ReadResourceStream_Original.ptr(inst, filestring);
 }
 
