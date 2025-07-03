@@ -31,7 +31,15 @@ along with this program; see the file COPYING. If not, see
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/syscall.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <errno.h>
 #include <unistd.h>
+
+#define DISK_BUFFER 2048
+#define DISK_PATH "/user/temp"
+#define DISK_CHECK DISK_PATH "/k"
+#define DISK_KLOG DISK_PATH "/klog"
 
 static int serve_file_while_connected(const char* path, int server_fd)
 {
@@ -243,12 +251,116 @@ static int serve_file(const char* path, uint16_t port, int notify_user)
     return 0;
 }
 
+static void* klog_to_disk_thread(void* args)
+{
+    (void)args;
+
+    char buffer[DISK_BUFFER];
+    char filename[256];
+    char date_str[32];
+    time_t now;
+    struct tm* tm_info;
+    int klog_fd = -1;
+    FILE* output_file = NULL;
+    ssize_t bytes_read;
+    struct stat st;
+
+    while (1)
+    {
+        if (stat(DISK_CHECK, &st) == 0)
+        {
+            if (output_file)
+            {
+                fclose(output_file);
+                output_file = NULL;
+            }
+
+            unlink(DISK_CHECK);
+        }
+
+        if (!output_file)
+        {
+            now = time(NULL);
+            tm_info = localtime(&now);
+            strftime(date_str, sizeof(date_str), "%Y%m%d_%H%M%S", tm_info);
+            snprintf(filename, sizeof(filename), DISK_KLOG "_%s.txt", date_str);
+
+            output_file = fopen(filename, "w");
+            if (!output_file)
+            {
+                perror("fopen output file");
+                sleep(1);
+                continue;
+            }
+
+            printf("Started logging to: %s\n", filename);
+        }
+
+        if (klog_fd < 0)
+        {
+            klog_fd = open("/dev/klog", O_RDONLY | O_NONBLOCK);
+            if (klog_fd < 0)
+            {
+                perror("open /dev/klog");
+                sleep(1);
+                continue;
+            }
+        }
+
+        bytes_read = read(klog_fd, buffer, DISK_BUFFER - 1);
+        if (bytes_read > 0)
+        {
+            buffer[bytes_read] = '\0';
+            fprintf(output_file, "%s", buffer);
+            fflush(output_file);
+        }
+        else if (bytes_read == 0)
+        {
+            usleep(10000);
+        }
+        else
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                usleep(10000);
+            }
+            else
+            {
+                perror("read /dev/klog");
+                close(klog_fd);
+                klog_fd = -1;
+                sleep(1);
+            }
+        }
+    }
+
+    if (output_file)
+    {
+        fclose(output_file);
+    }
+    if (klog_fd >= 0)
+    {
+        close(klog_fd);
+    }
+
+    return NULL;
+}
+
 void* pthread_kserver(void* args)
 {
     (void)args;
     uint16_t port = 3232;
     int notify_user = 1;
+    pthread_t disk_logger_thread;
+
     printf("Socket server was compiled at %s %s\n", __DATE__, __TIME__);
+
+    if (1 && pthread_create(&disk_logger_thread, NULL, klog_to_disk_thread, NULL) != 0)
+    {
+        perror("pthread_create disk logger");
+        return NULL;
+    }
+
     while (1)
     {
         serve_file("/dev/klog", port, notify_user);
