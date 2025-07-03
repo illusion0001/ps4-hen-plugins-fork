@@ -124,29 +124,41 @@ void* Mono_New_Array(const uint32_t buffer_size)
 
 void* Mono_New_Stream(const void* mscorlib, const void* Buffer, const uint32_t Buffer_Size)
 {
+    here();
     const void* Array = mono_array_new(Root_Domain, mono_get_byte_class(), Buffer_Size);
+    here();
     void* Array_addr = mono_array_addr_with_size(Array, sizeof(char), 0);
+    here();
     memcpy(Array_addr, Buffer, Buffer_Size);
+    here();
     const void* MemoryStream_class = Mono_Get_Class(mscorlib, "System.IO", "MemoryStream");
+    here();
     void* MemoryStream_Instance = mono_object_new(Root_Domain, MemoryStream_class);
+    here();
     // do it seprately because `MemoryStream_class` is needed
     const void* ctor = mono_class_get_method_from_name(MemoryStream_class, ".ctor", 2);
+    here();
     const void* args[2];
     args[0] = Array;
     int writable = 1;
     args[1] = &writable;
     const void* exception = NULL;
+    here();
     mono_runtime_invoke(ctor, MemoryStream_Instance, args, &exception);
+    here();
     if (exception)
     {
+        here();
         final_printf("Failed to allocate mono stream! Buffer 0x%p Size %u\n", Buffer, Buffer_Size);
         return NULL;
     }
+    here();
     return MemoryStream_Instance;
 }
 
 void* Mono_File_Stream(const void* corlib, const char* file_path)
 {
+    here();
     const void* file_class = mono_class_from_name(
         corlib,
         "System.IO",
@@ -155,6 +167,7 @@ void* Mono_File_Stream(const void* corlib, const char* file_path)
         file_class,
         "Open",
         3);
+        here();
 
     if (!open_method)
     {
@@ -162,12 +175,14 @@ void* Mono_File_Stream(const void* corlib, const char* file_path)
         return NULL;
     }
 
+    here();
     void* path_str = mono_string_new(Root_Domain, file_path);
     if (!path_str)
     {
         printf("Failed to allocate string for %s\n", __FUNCTION__);
         return NULL;
     }
+    here();
     const int filemode_open = 3;
     const int fileaccess_read = 1;
     const void* args[] = {path_str, &filemode_open, &fileaccess_read};
@@ -177,11 +192,13 @@ void* Mono_File_Stream(const void* corlib, const char* file_path)
         NULL,
         args,
         &exception);
+    here();
     if (exception)
     {
         printf("Exception occurred while opening file %s\n", file_path);
         return NULL;
     }
+    here();
     return filestream;
 }
 
@@ -192,6 +209,7 @@ const char* Mono_Read_Stream(const void* domain, const void* corelib, const void
         final_printf("Invalid arguments.\n");
         return 0;
     }
+    here();
     static const char space[] = "System.IO";
     static const char class[] = "StreamReader";
     const void* sr_class = Mono_Get_Class(corelib, space, class);
@@ -200,24 +218,29 @@ const char* Mono_Read_Stream(const void* domain, const void* corelib, const void
         final_printf("Failed to find %s class.\n", class);
         return 0;
     }
+    here();
     const void* ctor = mono_class_get_method_from_name(sr_class, ".ctor", 1);
     if (!ctor)
     {
         final_printf("Failed to find %s.%s constructor.\n", space, class);
         return 0;
     }
+    here();
     const void* reader_instance = mono_object_new(domain, sr_class);
     const void* ctor_args[1] = {stream_obj};
     const void* exc = NULL;
     mono_runtime_invoke(ctor, reader_instance, ctor_args, &exc);
+    here();
     if (exc)
     {
+        here();
         const void* msg = mono_object_to_string(exc, NULL);
         const char* c_msg = mono_string_to_utf8(msg);
         final_printf("Constructor exception: %s\n", c_msg);
         mono_free(c_msg);
         return 0;
     }
+    here();
     static const char method[] = "ReadToEnd";
     const void* read_method = mono_class_get_method_from_name(sr_class, method, 0);
     if (!read_method)
@@ -225,6 +248,7 @@ const char* Mono_Read_Stream(const void* domain, const void* corelib, const void
         final_printf("Failed to find %s method.\n", method);
         return 0;
     }
+    here();
     const void* result = mono_runtime_invoke(read_method, reader_instance, NULL, &exc);
     if (exc)
     {
@@ -234,7 +258,9 @@ const char* Mono_Read_Stream(const void* domain, const void* corelib, const void
         mono_free(c_msg);
         return 0;
     }
+    here();
     const char* c_str = mono_string_to_utf8(result);
+    here();
     return c_str;
 }
 
