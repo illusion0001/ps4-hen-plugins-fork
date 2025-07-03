@@ -396,11 +396,11 @@ int ftp_main(void)
 {
     uint16_t port = 2121;
     int notify_user = 1;
-    pid_t pid;
 
     printf("FTP server was compiled at %s %s\n", __DATE__, __TIME__);
 
 #if 0
+    pid_t pid;
     // change authid so certain character devices can be read, e.g.,
     // /dev/sflash0
     pid = getpid();
