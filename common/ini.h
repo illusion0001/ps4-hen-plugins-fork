@@ -38,6 +38,11 @@ typedef struct
     int modified;
 } INIFile;
 
+#if defined(cplusplus)
+extern "C" 
+{
+#endif
+
 INIFile* ini_load(const char* filename);
 void ini_free(INIFile* ini);
 int ini_save(INIFile* ini);
@@ -49,3 +54,7 @@ int ini_delete_section(INIFile* ini, const char* section);
 int ini_add_comment(INIFile* ini, const char* section, const char* comment_text);
 int ini_add_section_comment(INIFile* ini, const char* section, const char* comment_text);
 void ini_print(INIFile* ini);
+
+#if defined(cplusplus)
+}
+#endif
