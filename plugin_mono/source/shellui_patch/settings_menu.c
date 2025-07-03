@@ -238,7 +238,7 @@ static void UploadResourceStreamBranch(void)
             const uintptr_t ctor = (uintptr_t)Mono_Get_Address_of_Method(mscorlib_ptr, "System.Reflection", namespace, method, 1);
             if (ctor)
             {
-                const uintptr_t pHook = CreatePrologueHook(cavePad, sizeof(cavePad), ctor, 17);
+                const uintptr_t pHook = CreatePrologueHook(ctor, 17);
                 if (pHook)
                 {
                     ReadResourceStream_Original.addr = pHook;
@@ -364,7 +364,7 @@ void UploadOnBranch(void* app_exe)
     const uintptr_t OnPress = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.Settings.SettingsRoot", "SettingsRootHandler", "OnPress", 2);
     if (OnPress)
     {
-        const uintptr_t pHook = CreatePrologueHook(cavePad, sizeof(cavePad), OnPress,15);
+        const uintptr_t pHook = CreatePrologueHook(OnPress,15);
         if (pHook)
         {
             OnPress_Original.addr = pHook;
@@ -374,7 +374,7 @@ void UploadOnBranch(void* app_exe)
     const uintptr_t OnPreCreate = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.Settings.SettingsRoot", "SettingsRootHandler", "OnPreCreate", 2);
     if (OnPreCreate)
     {
-        const uintptr_t pHook = CreatePrologueHook(cavePad, sizeof(cavePad), OnPreCreate, 15);
+        const uintptr_t pHook = CreatePrologueHook(OnPreCreate, 15);
         if (pHook)
         {
             OnPreCreate_Original.addr = pHook;
