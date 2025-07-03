@@ -40,7 +40,7 @@ along with this program; see the file COPYING. If not, see
 #define DISK_PATH "/user/temp"
 #define DISK_CHECK DISK_PATH "/k"
 #define DISK_CHECK_STOP DISK_PATH "/sk"
-#define DISK_KLOG DISK_PATH "/klog"
+#define DISK_KLOG "user/data/klog"
 
 static int serve_file_while_connected(const char* path, int server_fd)
 {
