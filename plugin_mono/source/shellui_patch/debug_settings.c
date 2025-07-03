@@ -126,7 +126,7 @@ void UploadNewPkgInstallerPath(void* app_exe)
     if (SearchDir)
     {
         final_printf("SeachDir 0x%lx\n", SearchDir);
-        const uintptr_t pHook = CreatePrologueHook(cavePad, sizeof(cavePad), SearchDir, 15);
+        const uintptr_t pHook = CreatePrologueHook(SearchDir, 15);
         if (pHook)
         {
             PkgInstallerSearchDir_Original.addr = pHook;
