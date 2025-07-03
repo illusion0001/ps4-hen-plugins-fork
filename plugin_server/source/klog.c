@@ -31,7 +31,17 @@ along with this program; see the file COPYING. If not, see
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/syscall.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <errno.h>
 #include <unistd.h>
+
+#define DISK_BUFFER 2048
+#define DISK_PATH "/user/temp"
+#define DISK_CHECK DISK_PATH "/k"
+#define DISK_CHECK_STOP DISK_PATH "/sk"
+#define DISK_KLOG "/user/data/klog"
+#define DEVICE_KLOG "/dev/klog"
 
 static int serve_file_while_connected(const char* path, int server_fd)
 {
@@ -243,17 +253,149 @@ static int serve_file(const char* path, uint16_t port, int notify_user)
     return 0;
 }
 
+static void* klog_to_disk_thread(void* args)
+{
+    (void)args;
+
+    char buffer[DISK_BUFFER] = {0};
+    char filename[256] = {0};
+    char date_str[32] = {0};
+    int klog_fd = -1;
+    FILE* output_file = NULL;
+    ssize_t bytes_read = 0;
+    struct stat st = {0};
+    struct stat st2 = {0};
+    int stop_log = 0;
+
+    while (1)
+    {
+        if (stat(DISK_CHECK, &st) == 0)
+        {
+            if (output_file)
+            {
+                fclose(output_file);
+                Notify("", "Saved file\n%s\n", filename);
+                memset(filename, 0, sizeof(filename));
+                memset(date_str, 0, sizeof(date_str));
+                memset(buffer, 0, sizeof(buffer));
+                output_file = NULL;
+            }
+
+            unlink(DISK_CHECK);
+        }
+
+        if (stat(DISK_CHECK_STOP, &st2) == 0)
+        {
+            stop_log = 1;
+            unlink(DISK_CHECK_STOP);
+        }
+
+        if (stop_log)
+        {
+            break;
+        }
+
+        if (!output_file)
+        {
+            time_t now = {0};
+            struct tm* tm_info;
+            memset(filename, 0, sizeof(filename));
+            memset(date_str, 0, sizeof(date_str));
+            memset(buffer, 0, sizeof(buffer));
+            now = time(NULL);
+            tm_info = localtime(&now);
+            strftime(date_str, sizeof(date_str), "%Y%m%d_%H%M%S", tm_info);
+            snprintf(filename, sizeof(filename), DISK_KLOG "_%s.txt", date_str);
+
+            output_file = fopen(filename, "w");
+            if (!output_file)
+            {
+                perror("fopen output file");
+                sleep(1);
+                continue;
+            }
+
+            Notify("", "Started log file\n%s\n", filename);
+        }
+
+        if (klog_fd < 0)
+        {
+            klog_fd = open(DEVICE_KLOG, O_RDONLY | O_NONBLOCK);
+            if (klog_fd < 0)
+            {
+                perror("open " DEVICE_KLOG);
+                sleep(1);
+                continue;
+            }
+        }
+
+        bytes_read = read(klog_fd, buffer, DISK_BUFFER - 1);
+        if (bytes_read > 0)
+        {
+            buffer[bytes_read] = '\0';
+            fprintf(output_file, "%s", buffer);
+            fflush(output_file);
+        }
+        else if (bytes_read == 0)
+        {
+            usleep(10000);
+        }
+        else
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                usleep(10000);
+            }
+            else
+            {
+                perror("read " DEVICE_KLOG);
+                close(klog_fd);
+                klog_fd = -1;
+                sleep(1);
+            }
+        }
+    }
+
+    if (output_file)
+    {
+        fclose(output_file);
+    }
+    if (klog_fd >= 0)
+    {
+        close(klog_fd);
+    }
+
+    Notify("", "%s quit", __FUNCTION__);
+    pthread_exit(0);
+    return NULL;
+}
+
 void* pthread_kserver(void* args)
 {
     (void)args;
     uint16_t port = 3232;
     int notify_user = 1;
+    pthread_t dt;
+
     printf("Socket server was compiled at %s %s\n", __DATE__, __TIME__);
+
+    const int log_to_disk = 0;
+    if (log_to_disk && pthread_create(&dt, NULL, klog_to_disk_thread, NULL) != 0)
+    {
+        perror("pthread_create klog_to_disk_thread");
+        pthread_exit(0);
+        return NULL;
+    }
+
     while (1)
     {
-        serve_file("/dev/klog", port, notify_user);
-        notify_user = 0;
+        if (!log_to_disk)
+        {
+            serve_file(DEVICE_KLOG, port, notify_user);
+            notify_user = 0;
+        }
         sleep(3);
     }
+    pthread_exit(0);
     return 0;
 }
