@@ -158,6 +158,7 @@ uiTYPEDEF_FUNCTION_PTR(void*, ReadResourceStream_Original, void* inst, void* str
 static void* ReadResourceStream(void* inst, MonoString* filestring)
 {
     printf("%s (%ls)\n", __FUNCTION__, filestring->str);
+    {
         static void* mscorlib_ptr = 0;
         if (!mscorlib_ptr)
         {
@@ -213,6 +214,7 @@ static void* ReadResourceStream(void* inst, MonoString* filestring)
                 return ReadResourceStream_Original.ptr(inst, Mono_New_String("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.PkgInstaller.data.pkginstaller.xml"));
             }
         }
+    }
     return ReadResourceStream_Original.ptr(inst, filestring);
 }
 
