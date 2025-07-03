@@ -5,11 +5,7 @@
 #include <stdio.h>
 #include <orbis/libkernel.h>
 
-#if !defined(MAX_CAVE_SIZE)
-#define MAX_CAVE_SIZE 4096
-#endif
-
-static uint8_t cavePad[MAX_CAVE_SIZE] = {};
+#include "cave.inc.c"
 
 /*
  * @brief Scan for a given byte pattern on a module
@@ -42,7 +38,7 @@ uintptr_t* findSymbolPtrInEboot(const char* module, const char* symbol_name);
 const char* char_Scan(const void* module, const size_t sizeOfImage, const char* value);
 void PatchInternalCallList(const uintptr_t textbase, const uint64_t textsz, const char* target_symbol, uintptr_t* target_call, uintptr_t dest_call);
 void PatchCall_Internal(const struct OrbisKernelModuleInfo* info, const char* p, const size_t offset, const uintptr_t target, uintptr_t* original, const char* verbose);
-uintptr_t CreatePrologueHook(uint8_t* cavePad, const size_t cavePadSize, const uintptr_t address, const int min_instruction_size);
+uintptr_t CreatePrologueHook(const uintptr_t address, const int min_instruction_size);
 
 #define expression_to_str(...) __VA_ARGS__, #__VA_ARGS__
 #define PatchCall(info, p, offset, target, original) PatchCall_Internal(expression_to_str(info, p, offset, target, original))
