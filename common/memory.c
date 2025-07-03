@@ -612,28 +612,22 @@ static size_t GetInstructionSize(uint64_t Address, size_t MinSize)
 // Allocation-less version of a Prologue hook
 // I use pre-allocated `returnPad`, copy instructions to it and write instructions to it
 static size_t caveInstSize = 0;
-static void* g_cavePad = 0;
-static bool g_caveValid = false;
-static void CaveBlockInit(void)
+static void CaveBlockInit(uint8_t* cavePad, const size_t cavePadSize)
 {
     static bool once = false;
     if (!once)
     {
-        g_cavePad = mmap(0, MAX_CAVE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-        if (g_cavePad != MAP_FAILED)
-        {
-            sceKernelMprotect(g_cavePad, MAX_CAVE_SIZE, 7);
-            static const uint8_t m[] = {0xB8, 0x01, 0x00, 0x00, 0x00, 0xC3};
-            int (*test)(void);
-            test = (void*)g_cavePad;
-            memcpy(g_cavePad, m, sizeof(m));
-            final_printf("checking executable code, it returned %d\n", test());
-            memset(g_cavePad, 0xcc, MAX_CAVE_SIZE);
-            // DWORD temp = caveInstSize = 0;
-            // VirtualProtect(cavePad, cavePadSize, PAGE_EXECUTE_WRITECOPY, &temp);
-            g_caveValid = once = true;
-            printf("cavePad setup at 0x%p! Size %ld\n", g_cavePad, MAX_CAVE_SIZE);
-        }
+        sceKernelMprotect(cavePad, cavePadSize, 7);
+        static const uint8_t m[] = {0xB8, 0x01, 0x00, 0x00, 0x00, 0xC3};
+        int (*test)(void);
+        test = (void*)cavePad;
+        memcpy(cavePad, m, sizeof(m));
+        final_printf("checking executable code, it returned %d\n", test());
+        memset(cavePad, 0xcc, cavePadSize);
+        // DWORD temp = caveInstSize = 0;
+        // VirtualProtect(cavePad, cavePadSize, PAGE_EXECUTE_WRITECOPY, &temp);
+        once = true;
+        printf("cavePad setup at 0x%p! Size %ld\n", cavePad, cavePadSize);
     }
 }
 static bool validnateBlockSize(const size_t cavePadSize, const size_t newSize)
@@ -645,20 +639,20 @@ static bool validnateBlockSize(const size_t cavePadSize, const size_t newSize)
     }
     return 1;
 }
-uintptr_t CreatePrologueHook(const uintptr_t address, const int min_instruction_size)
+uintptr_t CreatePrologueHook(uint8_t* cavePad, const size_t cavePadSize, const uintptr_t address, const int min_instruction_size)
 {
-    CaveBlockInit();
-    if (!g_caveValid || !address || min_instruction_size < 5)
+    CaveBlockInit(cavePad, cavePadSize);
+    if (!address || min_instruction_size < 5)
     {
         return 0;
     }
     const size_t int_size = GetInstructionSize(address, min_instruction_size);
-    if (!int_size || !validnateBlockSize(MAX_CAVE_SIZE, caveInstSize + int_size + sizeof(JMPstub)))
+    if (!int_size || !validnateBlockSize(cavePadSize, caveInstSize + int_size + sizeof(JMPstub)))
     {
         return 0;
     }
     const size_t addroffset = sizeof(JMPstub);
-    const uintptr_t ucavePad = (uintptr_t)g_cavePad;
+    const uintptr_t ucavePad = (uintptr_t)cavePad;
     const uintptr_t ucavePadNew = ucavePad + caveInstSize;
     const uintptr_t retaddr = address + int_size;
     const int pid = getpid();
