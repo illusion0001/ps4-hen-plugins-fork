@@ -140,6 +140,8 @@ void UploadEventProxyCall(const struct OrbisKernelModuleInfo* info)
 void UploadRegStrCall(const struct OrbisKernelModuleInfo* info, const struct OrbisKernelModuleInfo* app_exe)
 {
     PatchCall(info, "44 89 ff 48 89 c6 4c 89 e2 48 89 c3 c6 00 00 e8 ? ? ? ? 41 89 c7 85 c0 74 ? c6 03 00", 15, (uintptr_t)RegMgrStr, 0);
+    // Not working for < 5.50 yet
+    return;
     const int pid = getpid();
     const void* start_addr = app_exe->segmentInfo[0].address;
     const uintptr_t start_addr2 = (uintptr_t)start_addr;
