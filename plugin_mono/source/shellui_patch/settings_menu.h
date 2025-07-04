@@ -7,3 +7,4 @@
 
 void UploadOnBranch(void* app_exe);
 void UploadNewCorelibStreamReader(void);
+void UploadFinishBootEffectCode(const struct OrbisKernelModuleInfo* info);
