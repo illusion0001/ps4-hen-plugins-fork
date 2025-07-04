@@ -489,7 +489,7 @@ uintptr_t* findSymbolPtrInEboot(const char* module, const char* symbol_name)
         if (handle > 0)
         {
             sceKernelDlsym(handle, symbol_name, (void**)&symbol);
-            printf("symbol %s resolved to %lx (real %lx)\n", symbol_name, symbol, *(uintptr_t*)0x00f3a9e8);
+            printf("symbol %s resolved to %lx\n", symbol_name, symbol);
         }
     }
     if (!symbol)
