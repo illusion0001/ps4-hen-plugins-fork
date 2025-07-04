@@ -382,3 +382,48 @@ void UploadNewCorelibStreamReader(void)
 {
     UploadResourceStreamBranch();
 }
+
+uiTYPEDEF_FUNCTION_PTR(void, FinishBootEffect_original, void* _this);
+void PrintTimeTick(void);
+
+static void FinishBootEffect(void* _this)
+{
+    static bool once = false;
+    if (!once)
+    {
+        PrintTimeTick();
+        once = true;
+    }
+    FinishBootEffect_original.ptr(_this);
+}
+
+void UploadFinishBootEffectCode(const struct OrbisKernelModuleInfo* info)
+{
+    const void* mm_p = info->segmentInfo[0].address;
+    const uint32_t mm_s = info->segmentInfo[0].size;
+    const uintptr_t FinishBoot = PatternScan(mm_p, mm_s,
+                                             "55 "
+                                             "48 8B EC "
+                                             "48 83 EC ? "
+                                             "4C 89 7D ? "
+                                             "4C 8B FF "
+                                             "33 C0 "
+                                             "48 89 45 ? "
+                                             "48 89 45 ? "
+                                             "48 89 45 ? "
+                                             "49 8B 47 38 "
+                                             "48 8B F5 "
+                                             "48 83 C6 ? "
+                                             "48 8B F8 "
+                                             "83 38 00",
+                                             0);
+    if (FinishBoot)
+    {
+        const uintptr_t BootCave = CreatePrologueHook(FinishBoot, 15);
+        if (BootCave)
+        {
+            FinishBootEffect_original.addr = BootCave;
+            WriteJump64(FinishBoot, (uintptr_t)FinishBootEffect);
+        }
+    }
+}

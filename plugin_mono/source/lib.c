@@ -49,18 +49,11 @@ static void open_console(void)
     }
 }
 
-uiTYPEDEF_FUNCTION_PTR(void, PrintTimeTick_Original, void* MonoStr);
-
-static void PrintTimeTick(void* MonoStr)
+void PrintTimeTick(void)
 {
-    extern const char* ScePsmMonoStringToUtf8(void* param_1);
-    extern void* mono_pe_file_open(const char* f, const void* s);
-    extern void* mono_image_open_from_data(const void* data, uint32_t data_len, bool need_copy, uint32_t* status);
-    const char* msg = ScePsmMonoStringToUtf8(MonoStr);
     static bool once = false;
-    if (msg && !once && strstr(msg, "Shell UI is Ready"))
+    if (!once)
     {
-        Notify("", msg);
         Root_Domain = mono_get_root_domain();
         if (Root_Domain)
         {
@@ -79,40 +72,8 @@ static void PrintTimeTick(void* MonoStr)
             UploadNewPkgInstallerPath(App_Exe);
             UploadOnBranch(App_Exe);
         }
-        mono_free(msg);
         once = true;
     }
-    PrintTimeTick_Original.ptr(MonoStr);
-}
-
-uiTYPEDEF_FUNCTION_PTR(int, sceSysmoduleLoadModuleInternal_original, const uint32_t m);
-
-static int sceSysmoduleLoadModuleInternal_hook(const uint32_t m)
-{
-    const int ret = sceSysmoduleLoadModuleInternal_original.ptr(m);
-    printf("request 0x%08x ret %d\n", m, ret);
-    if (m == 0x80000030 && ret == 0)
-    {
-        printf("PSM Handle %d\n", ret);
-        static const char mod_name[] = "libScePsm.sprx";
-        const int m = sceKernelLoadStartModule(mod_name, 0, 0, 0, 0, 0);
-        static bool once = false;
-        if (!once && m > 0)
-        {
-            printf("load start %s %d\n", mod_name, m);
-            struct OrbisKernelModuleInfo moduleInfo = {0};
-            moduleInfo.size = sizeof(moduleInfo);
-            int ret2 = sceKernelGetModuleInfo(m, &moduleInfo);
-            final_printf("ret 0x%x\n", ret2);
-            final_printf("module %d\n", m);
-            final_printf("name: %s\n", moduleInfo.name);
-            const void* mm_p = moduleInfo.segmentInfo[0].address;
-            const uint32_t mm_s = moduleInfo.segmentInfo[0].size;
-            PatchInternalCallList((uintptr_t)mm_p, mm_s, "Sce.PlayStation.Core.Runtime.DiagnosticsNative::DebugPrintTimeTick(string)", &PrintTimeTick_Original.addr, (uintptr_t)PrintTimeTick);
-            once = true;
-        }
-    }
-    return ret;
 }
 
 static int sceKernelGetHwSerialNumber_hook(char* buf)
@@ -152,12 +113,6 @@ attr_public int plugin_load(struct SceEntry* args)
     open_console();
     printf("====\n\nHello from mono module\n\n====\n");
     puts(g_pluginVersion);
-    const uintptr_t* p = findSymbolPtrInEboot("libSceSysmodule.sprx", "sceSysmoduleLoadModuleInternal");
-    if (p)
-    {
-        sceSysmoduleLoadModuleInternal_original.addr = *p;
-    }
-
     struct OrbisKernelModuleInfo info = {0};
     info.size = sizeof(info);
     const int r = sceKernelGetModuleInfo(0, &info);
@@ -177,14 +132,10 @@ attr_public int plugin_load(struct SceEntry* args)
                 UploadRemotePlayPatch(&info_app);
                 UploadShellUICheck();
                 UploadBgftFixup(&info);
+                UploadFinishBootEffectCode(&info_app);
             }
         }
     }
-    const uintptr_t new_func = (uintptr_t)sceSysmoduleLoadModuleInternal_hook;
-    printf("findSymbolPtrInEboot 0x%p\n", p);
-    printf("p read 0x%lx\n", *p);
-    sys_proc_rw(getpid(), (uintptr_t)p, &new_func, sizeof(new_func), 1);
-    printf("p read 0x%lx\n", *p);
     uintptr_t sceKernelGetHwSerialNumber = 0;
     sceKernelDlsym(0x2001, "sceKernelGetHwSerialNumber", (void**)&sceKernelGetHwSerialNumber);
     if (sceKernelGetHwSerialNumber)
