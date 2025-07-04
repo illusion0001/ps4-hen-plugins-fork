@@ -16,8 +16,6 @@
 #include "../ini.h"
 #include "../hen_settings.inc.c"
 
-#define _countof(a) sizeof(a) / sizeof(*a)
-
 typedef enum
 {
     REPLACE_MATCH,

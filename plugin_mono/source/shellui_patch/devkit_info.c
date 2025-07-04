@@ -153,16 +153,23 @@ void UploadRegStrCall(const struct OrbisKernelModuleInfo* info, const struct Orb
         // clang-format on
         sys_proc_rw(pid, system_name_str, str, sizeof(str), 1);
     }
+    static const char* icons[] = {
+        "00 1B 6D 00 5F 00 66 00 72 00 69 00 65 00 6E 00 64 00 50 00 61 00 6E 00 65 00 6C 00",                    // m_friendPanel
+        "00 21 6D 00 5F 00 65 00 76 00 65 00 6E 00 74 00 42 00 61 00 73 00 65 00 50 00 61 00 6E 00 65 00 6C 00",  // m_eventBasePanel
+        "00 17 6D 00 5F 00 6D 00 61 00 69 00 6C 00 50 00 61 00 6E 00 65 00 6C 00",                                // m_mailPanel
+        "00 21 6D 00 5F 00 70 00 61 00 72 00 74 00 79 00 42 00 61 00 73 00 65 00 50 00 61 00 6E 00 65 00 6C 00",  // m_partyBasePanel
+    };
+    for (size_t i = 0; i < _countof(icons); i++)
+    {
+        const uintptr_t icon = PatternScan(start_addr, start_size, icons[i], 0);
+        if (icon)
+        {
+            const uint16_t str_len = 0;
+            sys_proc_rw(pid, icon, &str_len, sizeof(str_len), 1);
+        }
+    }
     // TODO: Port to other firmwares
     return;
-    // m_partyBasePanel
-    sys_proc_memset(pid, start_addr2 + 0x00dacc40, 0x90, 6);
-    // m_mailPanel
-    sys_proc_memset(pid, start_addr2 + 0x00dacc26, 0x90, 6);
-    // m_friendPanel
-    sys_proc_memset(pid, start_addr2 + 0x00dacc68, 0x90, 6);
-    // m_eventBasePanel
-    sys_proc_memset(pid, start_addr2 + 0x00dacc87, 0x90, 6);
     const uintptr_t devkit_font = PatternScan(start_addr, start_size, "be 12 00 00 00 b9 02 00 00 00", 1);
     if (devkit_font)
     {
