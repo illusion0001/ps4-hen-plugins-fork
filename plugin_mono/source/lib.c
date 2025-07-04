@@ -22,7 +22,7 @@
 #include "hen_settings.inc.c"
 #include "../../common/file.h"
 
-attr_public const char* g_pluginName = "plugin_example";
+attr_public const char* g_pluginName = "plugin_mono";
 attr_public const char* g_pluginDesc = "Demonstrate usage of CXX in module. Based from OpenOrbis `library_example`";
 attr_public const char* g_pluginAuth = "illusiony";
 attr_public const char* g_pluginVersion = "Git Commit: " GIT_COMMIT
@@ -112,6 +112,12 @@ attr_public int plugin_load(struct SceEntry* args)
     write_file(SHELLUI_HEN_SETTINGS, data_hen_settings_xml, data_hen_settings_xml_len);
     open_console();
     printf("====\n\nHello from mono module\n\n====\n");
+    if (file_exists_temp(g_pluginName) == 0)
+    {
+        Notify("", "Attempted to load %s again! Did it crash previously?\n", g_pluginName);
+        return 0;
+    }
+    touch_temp(g_pluginName);
     puts(g_pluginVersion);
     struct OrbisKernelModuleInfo info = {0};
     info.size = sizeof(info);
