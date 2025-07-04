@@ -105,28 +105,14 @@ static void PatchDebugSettings(void)
     }
 }
 
-attr_public int plugin_load(struct SceEntry* args)
+static void RunPost(const int app_exe)
 {
-    mkdir(BASE_PATH, 0777);
-    mkdir(SHELLUI_DATA_PATH, 0777);
-    write_file(SHELLUI_HEN_SETTINGS, data_hen_settings_xml, data_hen_settings_xml_len);
-    open_console();
-    printf("====\n\nHello from mono module\n\n====\n");
-    if (file_exists_temp(g_pluginName) == 0)
-    {
-        Notify("", "Attempted to load %s again! Did it crash previously?\n", g_pluginName);
-        return 0;
-    }
-    touch_temp(g_pluginName);
-    puts(g_pluginVersion);
     struct OrbisKernelModuleInfo info = {0};
     info.size = sizeof(info);
     const int r = sceKernelGetModuleInfo(0, &info);
     if (r == 0)
     {
         UploadEventProxyCall(&info);
-        int app_exe = sceKernelLoadStartModule("/app0/psm/Application/app.exe.sprx", 0, 0, 0, 0, 0);
-        printf("app_exe 0x%x\n", app_exe);
         if (app_exe > 0)
         {
             struct OrbisKernelModuleInfo info_app = {0};
@@ -149,6 +135,53 @@ attr_public int plugin_load(struct SceEntry* args)
         WriteJump64(sceKernelGetHwSerialNumber, (uintptr_t)sceKernelGetHwSerialNumber_hook);
     }
     UploadDebugSettingsPatch();
+}
+
+uiTYPEDEF_FUNCTION_PTR(int, sceKernelLoadStartModuleInternalForMono_original, const char* param_1, void* param_2, void* param_3, void* param_4, void* param_5, void* param_6);
+
+static int sceKernelLoadStartModuleInternalForMono_Hook(const char* param_1, void* param_2, void* param_3, void* param_4, void* param_5, void* param_6)
+{
+    const int md = sceKernelLoadStartModuleInternalForMono_original.ptr(param_1, param_2, param_3, param_4, param_5, param_6);
+    debug_printf("path %s load returned 0x%08x\n", param_1, md);
+    static bool test = false;
+    if (!test && md > 0 && strstr(param_1, "/app0/psm/Application/app.exe.sprx"))
+    {
+        RunPost(md);
+        test = true;
+    }
+    return md;
+}
+
+static void UploadMonoCall(void)
+{
+    uintptr_t monoCall = 0;
+    sceKernelDlsym(0x2001, "sceKernelLoadStartModuleInternalForMono", (void**)&monoCall);
+    if (monoCall)
+    {
+        const uint8_t* monoByte = (uint8_t*)monoCall;
+        if (monoByte[0] == 0xe9)
+        {
+            sceKernelLoadStartModuleInternalForMono_original.addr = ReadLEA32(monoCall, 0, 1, 5);
+            WriteJump64(monoCall, (uintptr_t)sceKernelLoadStartModuleInternalForMono_Hook);
+        }
+    }
+}
+
+attr_public int plugin_load(struct SceEntry* args)
+{
+    mkdir(BASE_PATH, 0777);
+    mkdir(SHELLUI_DATA_PATH, 0777);
+    write_file(SHELLUI_HEN_SETTINGS, data_hen_settings_xml, data_hen_settings_xml_len);
+    open_console();
+    printf("====\n\nHello from mono module\n\n====\n");
+    if (__FINAL__ && file_exists_temp(g_pluginName) == 0)
+    {
+        Notify("", "Attempted to load %s again! Did it crash previously?\n", g_pluginName);
+        return 0;
+    }
+    touch_temp(g_pluginName);
+    puts(g_pluginVersion);
+    UploadMonoCall();
     return 0;
 }
 
