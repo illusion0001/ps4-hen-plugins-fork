@@ -4,17 +4,19 @@ Plugin system for Updated PS4 Homebrew Enabler [ps4-hen](https://github.com/Scen
 
 # Plugins
 
-- `plugin_mono`
+### `plugin_mono`
   - Patches ShellUI to allow more features.
   - Features:
-    - **New** Install Packages from Hard Disk (`/data/pkg`)
+  - Package Installer:
+    - Show path to package files
+    - **New!** Install Packages from Hard Disk (`/data/pkg`)
     - Install Package from USB Storage
-    - Adjust PS4HEN Payload settings.
+  - Adjust HEN Payload settings.
   - Based from [Orbis-Toolbox](https://github.com/OSM-Made/Orbis-Toolbox) and research by [OSM-Made](https://github.com/OSM-Made)
-- `plugin_example`
+### `plugin_example`
   - Demonstrate usage of CXX in module.
   - Based from OpenOrbis [`library_example`](https://github.com/OpenOrbis/OpenOrbis-PS4-Toolchain/blob/63c0be5ffff09fbaebebc6b9a738d150e2da0205/samples/library_example/library_example/lib.cpp)
-- `plugin_server`
+### `plugin_server`
   - Starts klog on port 3232 <!-- (assuming process has access to `/dev/klog`, i.e `ScePartyDaemonMain`) -->
   - Based on [klogsrv](https://github.com/ps5-payload-dev/klogsrv)
   - Starts FTP server on port 2121.
