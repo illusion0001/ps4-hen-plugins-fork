@@ -34,6 +34,7 @@
     </setting_list>
     <link id="id_game_package_installer_hdd" title="Install Package from Hard Disk" description="Place package files into /data/pkg.&#xa;Recursive path not supported." file="PkgInstaller/data/pkginstaller_hdd.xml" />
     <link id="id_game_package_installer_usb" title="Install Package from USB Storage" description="Place package files into root of USB Storage.&#xa;Recursive path not supported." file="PkgInstaller/data/pkginstaller_usb.xml" />
+    <button id="id_show_sysiteminit" title="Show SystemAreaPanel::SysItemInit method"/>
     <!--
     <button id="id_restart_shellui" title="Restart ShellUI" description="Restarts ShellUI."/>
     -->

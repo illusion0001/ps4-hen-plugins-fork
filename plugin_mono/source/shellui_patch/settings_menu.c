@@ -329,6 +329,21 @@ static void NewOnPress(const void* p1, const void* element, const void* p3)
     {
         ReadWriteLocalSettings(Type, Id, Value, false, 0, 0);
     }
+    if (SID(Id) == SID("id_show_sysiteminit"))
+    {
+        const uintptr_t p = (uintptr_t)Mono_Get_Address_of_Method(App_Exe, "Sce.Vsh.ShellUI.TopMenu", "SystemAreaPanel", "SysItemInit", 0);
+        const int app_exe_h = sceKernelLoadStartModule("/app0/psm/Application/app.exe.sprx", 0, 0, 0, 0, 0);
+        if (app_exe_h > 0)
+        {
+            struct OrbisKernelModuleInfo info = {0};
+            info.size = sizeof(info);
+            const int r = sceKernelGetModuleInfo(app_exe_h, &info);
+            if (r == 0)
+            {
+                Notify("", "SysItemInit 0x%lx 0x%lx\n", p, p - (uintptr_t)info.segmentInfo[0].address);
+            }
+        }
+    }
     // id_restart_shellui
     OnPress_Original.ptr(p1, element, p3);
 }
