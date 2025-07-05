@@ -8,6 +8,8 @@
 
 #include <pthread.h>
 
+#define mnt_sus_path "/mnt/.."
+
 void UploadDebugSettingsPatch(void)
 {
     uintptr_t sceKernelGetUtokenStoreModeForRcmgr = 0;
@@ -60,7 +62,7 @@ static int _DownloadRegisterTaskByStorageEx(void* bgft_params, int32_t* refout)
     final_printf("path %ls\n", bgft_params_u64->content_url->str);
     {
         const char* curl = mono_string_to_utf8(bgft_params_u64->content_url);
-        static const char mnt_sus[] = "/mnt/..";
+        static const char mnt_sus[] = mnt_sus_path;
         if (strstr(curl, mnt_sus))
         {
             final_printf("before fixup %ls\n", bgft_params_u64->content_url->str);
@@ -120,6 +122,20 @@ void UploadBgftFixup(const struct OrbisKernelModuleInfo* info)
     PatchInternalCallList((uintptr_t)mm_p, mm_s, "Sce.Vsh.Orbis.Bgft.BgftWrapper::_DownloadRegisterTaskByStorageEx", &_DownloadRegisterTaskByStorageEx_Original.addr, (uintptr_t)_DownloadRegisterTaskByStorageEx);
 }
 
+uiTYPEDEF_FUNCTION_PTR(void*, pkg_new_element_original, void* inst, void* path);
+
+static void* pkg_new_element_ex(void* inst, MonoString* path)
+{
+    void* ret = pkg_new_element_original.ptr(inst, path);
+    const void* settings = Mono_Get_Class(App_Exe, "Sce.Vsh.ShellUI.Settings.Core", "ButtonElementData");
+    char path_desc[260+128] = {0};
+    const wchar_t* hdd_path = wcsstr(path->str, L"" mnt_sus_path "/data");
+    snprintf(path_desc, _countof(path_desc) - 1, "Path: %ls", hdd_path ? path->str + (_countof(mnt_sus_path) - 1) : path->str);
+    Mono_Set_Property(settings, ret, "SecondTitle", Mono_New_String(path_desc));
+    final_printf("path %ls ret 0x%p\n", path->str, ret);
+    return ret;
+}
+
 void UploadNewPkgInstallerPath(void* app_exe)
 {
     const uintptr_t SearchDir = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.Settings.PkgInstaller", "SearchJob", "SearchDir", 2);
@@ -132,6 +148,26 @@ void UploadNewPkgInstallerPath(void* app_exe)
             PkgInstallerSearchDir_Original.addr = pHook;
             final_printf("PkgInstallerSearchDir_Original.addr 0x%lx\n", PkgInstallerSearchDir_Original.addr);
             WriteJump64(SearchDir, (uintptr_t)PkgInstallerSearchDir);
+        }
+    }
+    const uintptr_t pkg_new_element = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.Settings.PkgInstaller", "PageDefault", "NewElementData", 1);
+    const int app_exe_h = sceKernelLoadStartModule("/app0/psm/Application/app.exe.sprx", 0,0,0,0,0);
+    if (pkg_new_element && app_exe_h > 0)
+    {
+        struct OrbisKernelModuleInfo info = {0};
+        info.size = sizeof(info);
+        const int r = sceKernelGetModuleInfo(app_exe_h, &info);
+        if (r == 0)
+        {
+            final_printf("pkg_new_element 0x%lx\n", pkg_new_element);
+            const size_t min_sz = 6;
+            const uintptr_t pHook = CreatePrologueHook(pkg_new_element, min_sz);
+            if (pHook)
+            {
+                pkg_new_element_original.addr = pHook;
+                final_printf("pkg_new_element_original.addr 0x%lx\n", pkg_new_element_original.addr);
+                Make32to64Jmp((uintptr_t)info.segmentInfo[0].address, info.segmentInfo[0].size, pkg_new_element, (uintptr_t)pkg_new_element_ex, min_sz, false, 0);
+            }
         }
     }
 }
