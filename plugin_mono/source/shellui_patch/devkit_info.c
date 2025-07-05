@@ -169,6 +169,16 @@ void UploadRegStrCall(const struct OrbisKernelModuleInfo* info, const struct Orb
             sys_proc_rw(pid, icon, &str_len, sizeof(str_len), 1);
         }
     }
+    for (size_t i = 2; i < 7; i++)
+    {
+        char nicon[256] = {0};
+        snprintf(nicon, _countof(nicon), "ba %02x 00 00 00 e8 ? ? ? ? 48 8b bd b0 fe ff ff", i);
+        const uintptr_t icon = PatternScan(start_addr, start_size, nicon, 5);
+        if (icon)
+        {
+            sys_proc_memset(pid, icon, 0x90, 5);
+        }
+    }
     // TODO: Port to other firmwares
     return;
     const uintptr_t devkit_font = PatternScan(start_addr, start_size, "be 12 00 00 00 b9 02 00 00 00", 1);
