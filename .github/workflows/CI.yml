@@ -75,7 +75,7 @@ jobs:
 
     - name: Zip
       working-directory: ${{ env.zip_glob_path }}
-      run: 7z a ${{ env.zip }} ${{ env.zip_glob }} ${{ github.workspace }}/LICENSE
+      run: 7z a ${{ env.zip }} ${{ env.zip_glob }} ${{ github.workspace }}/LICENSE ${{ github.workspace }}/plugin_server/LICENSE.plugin_server.txt
 
     - name: Copy plugins
       working-directory: ${{ env.hen_path }}
