@@ -165,7 +165,9 @@ void UploadRegStrCall(const struct OrbisKernelModuleInfo* info, const struct Orb
         if (icon)
         {
             const uint16_t str_len_le = __builtin_bswap16(*(uint16_t*)icon);
-            const uint16_t str_len = __builtin_bswap16(str_len_le - 1);
+            const uint16_t str_len_le1 = str_len_le - 2;
+            const uint16_t str_len = __builtin_bswap16(str_len_le1);
+            final_printf("str_len_le1 %d\n", str_len_le1);
             sys_proc_rw(pid, icon, &str_len, sizeof(str_len), 1);
         }
     }
