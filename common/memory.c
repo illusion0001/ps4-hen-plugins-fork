@@ -656,9 +656,10 @@ uintptr_t CreatePrologueHook(const uintptr_t address, const int min_instruction_
     sys_proc_rw(pid, ucavePadNew + int_size, &JMPstub, addroffset, 1);
     sys_proc_rw(pid, ucavePadNew + int_size + addroffset, &retaddr, sizeof(retaddr), 1);
     const uintptr_t caveAddr = ucavePad + caveInstSize;
-    caveInstSize += int_size + (sizeof(JMPstub) + sizeof(uintptr_t));
+    const uint64_t new_cave_size = int_size + (sizeof(JMPstub) + sizeof(uintptr_t));
+    caveInstSize += new_cave_size;
     printf("New caveInstSize: %ld\n", caveInstSize);
-    hex_dump(caveAddr, caveInstSize, caveAddr);
+    hex_dump(caveAddr, new_cave_size, caveAddr);
     return caveAddr;
 }
 
