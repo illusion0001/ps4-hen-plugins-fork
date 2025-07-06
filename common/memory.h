@@ -31,6 +31,7 @@ long orbis_syscall(long sysno, ...);
 int sys_proc_rw(const int pid, const uintptr_t addr, const void* data, const uint64_t datasz, const uint64_t write_);
 int sys_proc_memset(const int pid, const uintptr_t src, const uint32_t c, const uint64_t len);
 uint64_t* u64_Scan(const void* module, const uint64_t sizeOfImage, const uint64_t value);
+void* Mem_Scan(const void* module, const uint64_t sizeOfImage, const void* value, const size_t value_sz);
 
 // https://github.com/idc/ps4-experiments-405/blob/361738a2ee8a0fd32090c80bd2b49dae94ff08a5/hostapp_launch_patcher/source/patch.c#L57
 int get_code_info(const int pid, const void* addrstart, uint64_t* paddress, uint64_t* psize, const uint32_t page_idx);
