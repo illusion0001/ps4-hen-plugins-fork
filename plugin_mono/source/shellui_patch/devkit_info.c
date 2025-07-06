@@ -156,6 +156,7 @@ void UploadRegStrCall(const struct OrbisKernelModuleInfo* info, const struct Orb
     static const char* icons[] = {
         "00 1B 6D 00 5F 00 66 00 72 00 69 00 65 00 6E 00 64 00 50 00 61 00 6E 00 65 00 6C 00",                    // m_friendPanel
         "00 21 6D 00 5F 00 65 00 76 00 65 00 6E 00 74 00 42 00 61 00 73 00 65 00 50 00 61 00 6E 00 65 00 6C 00",  // m_eventBasePanel
+        "00 21 6D 00 5F 00 63 00 6F 00 6D 00 6D 00 75 00 6E 00 69 00 74 00 79 00 50 00 61 00 6E 00 65 00 6C 00",  // m_communityPanel
         "00 17 6D 00 5F 00 6D 00 61 00 69 00 6C 00 50 00 61 00 6E 00 65 00 6C 00",                                // m_mailPanel
         "00 21 6D 00 5F 00 70 00 61 00 72 00 74 00 79 00 42 00 61 00 73 00 65 00 50 00 61 00 6E 00 65 00 6C 00",  // m_partyBasePanel
     };
@@ -171,6 +172,7 @@ void UploadRegStrCall(const struct OrbisKernelModuleInfo* info, const struct Orb
             sys_proc_rw(pid, icon, &str_len, sizeof(str_len), 1);
         }
     }
+    return;
     for (size_t i = 2; i < 7; i++)
     {
         char nicon[256] = {0};
