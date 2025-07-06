@@ -297,6 +297,20 @@ uint64_t* u64_Scan(const void* module, const uint64_t sizeOfImage, const uint64_
     return 0;
 }
 
+void* Mem_Scan(const void* module, const uint64_t sizeOfImage, const void* value, const size_t value_sz)
+{
+    uint8_t* scanBytes = (uint8_t*)module;
+    for (size_t i = 0; i < sizeOfImage - value_sz; ++i)
+    {
+        uint8_t* v = &scanBytes[i];
+        if (memcmp(v, value, value_sz) == 0)
+        {
+            return v;
+        }
+    }
+    return 0;
+}
+
 extern int sysctl(const int* name, unsigned int namelen, void* oldp, size_t* oldlenp, const void* newp, size_t newlen);
 
 // https://github.com/idc/ps4-experiments-405/blob/361738a2ee8a0fd32090c80bd2b49dae94ff08a5/hostapp_launch_patcher/source/patch.c#L57
