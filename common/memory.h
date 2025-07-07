@@ -8,6 +8,7 @@
 #include "cave.inc.c"
 
 #define _countof(a) sizeof(a) / sizeof(*a)
+#define _countof_1(a) (_countof(a) - 1)
 
 /*
  * @brief Scan for a given byte pattern on a module
@@ -27,7 +28,6 @@ uintptr_t ReadLEA32(uintptr_t Address, size_t offset, size_t lea_size, size_t le
 void Make32to64Jmp(const uintptr_t textbase, const uintptr_t textsz, const uintptr_t src, const uintptr_t dst, const uint64_t srclen, const bool call, uintptr_t* src_out);
 void hex_dump(const uintptr_t data, const uint64_t size, const uintptr_t real);
 
-long orbis_syscall(long sysno, ...);
 int sys_proc_rw(const int pid, const uintptr_t addr, const void* data, const uint64_t datasz, const uint64_t write_);
 int sys_proc_memset(const int pid, const uintptr_t src, const uint32_t c, const uint64_t len);
 uint64_t* u64_Scan(const void* module, const uint64_t sizeOfImage, const uint64_t value);
