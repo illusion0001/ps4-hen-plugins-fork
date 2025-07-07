@@ -123,3 +123,26 @@ int file_exists_temp(const char* func)
     final_printf("[%s] %s return %d\n", __FUNCTION__, path, r);
     return r;
 }
+
+// https://github.com/bucanero/apollo-ps4/blob/461ee5d58653a82ab4b901041a3cc0b7026bfffb/source/saves.c#L190
+char* endsWith(const char* a, const char* b)
+{
+    int al = strlen(a), bl = strlen(b);
+
+    if (al < bl)
+    {
+        return NULL;
+    }
+
+    a += (al - bl);
+    while (*a)
+    {
+        extern int toupper(int);
+        if (toupper(*a++) != toupper(*b++))
+        {
+            return NULL;
+        }
+    }
+
+    return (char*)(a - bl);
+}

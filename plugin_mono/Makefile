@@ -30,14 +30,14 @@ INCLUDEDIR    := ../$(shell basename $(CURDIR))/include
 
 # Define objects to build
 CFILES      := $(wildcard $(PROJDIR)/*.c)
-CPPFILES    := $(wildcard $(PROJDIR)/*.cpp)
-COMMONFILES := $(wildcard $(COMMONDIR)/*.cpp)
-OBJS        := $(patsubst $(PROJDIR)/%.c, $(INTDIR)/%.o, $(CFILES)) $(patsubst $(PROJDIR)/%.cpp, $(INTDIR)/%.o, $(CPPFILES)) $(patsubst $(COMMONDIR)/%.cpp, $(INTDIR)/%.o, $(COMMONFILES))
-STUBOBJS    := $(patsubst $(PROJDIR)/%.c, $(INTDIR)/%.o, $(CFILES)) $(patsubst $(PROJDIR)/%.cpp, $(INTDIR)/%.o.stub, $(CPPFILES)) $(patsubst $(COMMONDIR)/%.cpp, $(INTDIR)/%.o.stub, $(COMMONFILES))
+CPPFILES    := $(wildcard $(PROJDIR)/*.cc)
+COMMONFILES := $(wildcard $(COMMONDIR)/*.cc)
+OBJS        := $(patsubst $(PROJDIR)/%.c, $(INTDIR)/%.o, $(CFILES)) $(patsubst $(PROJDIR)/%.cc, $(INTDIR)/%.o, $(CPPFILES)) $(patsubst $(COMMONDIR)/%.cc, $(INTDIR)/%.o, $(COMMONFILES))
+STUBOBJS    := $(patsubst $(PROJDIR)/%.c, $(INTDIR)/%.o, $(CFILES)) $(patsubst $(PROJDIR)/%.cc, $(INTDIR)/%.o.stub, $(CPPFILES)) $(patsubst $(COMMONDIR)/%.cc, $(INTDIR)/%.o.stub, $(COMMONFILES))
 
 # Define final C/C++ flags
 CFLAGS      := --target=x86_64-pc-freebsd12-elf -fPIC -funwind-tables -c $(EXTRAFLAGS) -isysroot $(TOOLCHAIN) -isystem $(TOOLCHAIN)/include
-CXXFLAGS    := $(CFLAGS) -isystem $(TOOLCHAIN)/include/c++/v1
+CXXFLAGS    := -std=c++17 $(CFLAGS) -isystem $(TOOLCHAIN)/include/c++/v1
 LDFLAGS     := -m elf_x86_64 -pie --script $(TOOLCHAIN)/link.x -e _init --eh-frame-hdr -L$(TOOLCHAIN)/lib $(LIBS) $(TOOLCHAIN)/lib/crtlib.o
 
 # Check for linux vs macOS and account for clang/ld path
@@ -79,13 +79,13 @@ $(INTDIR)/%.o: $(PROJDIR)/%.c
 	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -o $@ $<
 
-$(INTDIR)/%.o: $(PROJDIR)/%.cpp
+$(INTDIR)/%.o: $(PROJDIR)/%.cc
 	$(CCX) $(CXXFLAGS) -o $@ $<
 
 $(INTDIR)/%.o.stub: $(PROJDIR)/%.c
 	$(CC) -target x86_64-pc-linux-gnu -ffreestanding -nostdlib -fno-builtin -fPIC $(O_FLAG) -s -c -o $@ $<
 
-$(INTDIR)/%.o.stub: $(PROJDIR)/%.cpp
+$(INTDIR)/%.o.stub: $(PROJDIR)/%.cc
 	$(CCX) -target x86_64-pc-linux-gnu -ffreestanding -nostdlib -fno-builtin -fPIC $(O_FLAG) -s -c -o $@ $<
 
 build-info:
@@ -100,6 +100,7 @@ mono:
 
 send: $(TARGET)
 	curl -T $(TARGET).prx ftp://$(PS4_HOST):2121/data/hen/$(OUTPUT_PRX).prx
+	curl -T data/hen_settings.xml ftp://$(PS4_HOST):2121/data/hen/shellui_data/hen_settings.xml
 
 .PHONY: clean
 .DEFAULT_GOAL := all

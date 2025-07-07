@@ -57,21 +57,8 @@ jobs:
         ls .
         echo "OO_PS4_TOOLCHAIN=$PWD/OpenOrbis/PS4Toolchain" >> $GITHUB_ENV
 
-    - name: Setup codecave pad
-      run: bash int3.sh 4096 > common/cave.inc.c
-
-    - name: Build bootloader
-      run: make -C plugin_bootloader
-
-    - name: Build loader
-      run: make -C plugin_loader
-
-    - name: Build modules
-      run: |
-        make -C plugin_example
-        make -C plugin_mono
-        make -C plugin_shellcore
-        make -C plugin_server
+    - name: Build all modules
+      run: bash build.sh
 
     - name: Zip
       working-directory: ${{ env.zip_glob_path }}
