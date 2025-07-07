@@ -10,6 +10,7 @@
 
 void* Root_Domain = 0;
 void* App_Exe = 0;
+void* MSCorlib = 0;
 
 void* mono_get_image(const char* p)
 {
@@ -107,9 +108,9 @@ void* Mono_Get_Address_of_Method(const void* Assembly_Image, const char* Name_Sp
     return mono_aot_get_method(Root_Domain, Method);
 }
 
-void* Mono_New_String(const char* text)
+MonoString* Mono_New_String(const char* text)
 {
-    return mono_string_new(Root_Domain, text);
+    return (MonoString*)mono_string_new(Root_Domain, text);
 }
 
 void* Mono_New_Array(const uint32_t buffer_size)
@@ -288,4 +289,70 @@ void Mono_Set_Property(const void* klass, const void* instance, const char* prop
 
     const void* args[] = {value};
     mono_runtime_invoke(set_method, instance, args, NULL);
+}
+
+void* GetMsCorlib(void)
+{
+    if (MSCorlib)
+    {
+        return MSCorlib;
+    }
+    extern char* sceKernelGetFsSandboxRandomWord(void);
+    const char* sandbox_path = sceKernelGetFsSandboxRandomWord();
+    if (sandbox_path)
+    {
+        char mscorlib_sprx[260] = {};
+        snprintf(mscorlib_sprx, sizeof(mscorlib_sprx), "/%s/common/lib/mscorlib.dll", sandbox_path);
+        void* mscorlib_ptr = mono_get_image(mscorlib_sprx);
+        if (mscorlib_ptr)
+        {
+            MSCorlib = mscorlib_ptr;
+            return MSCorlib;
+        }
+    }
+    return 0;
+}
+
+MonoString* Mono_Add_String(MonoString* monoStr, const char* cStr)
+{
+    MonoString* monoStr2 = Mono_New_String(cStr);
+    void* string_class = mono_class_from_name(MSCorlib, "System", "String");
+    if (!string_class)
+    {
+        final_printf("Failed to get System.String class\n");
+        return NULL;
+    }
+    void* concat_method = mono_class_get_method_from_name(string_class, "Concat", 2);
+    if (!concat_method)
+    {
+        final_printf("Failed to find System.String::Concat(string, string)\n");
+        return NULL;
+    }
+    const void* args[] = {monoStr, monoStr2};
+    const void* exc = NULL;
+    MonoString* result = (MonoString*)mono_runtime_invoke(concat_method, NULL, args, &exc);
+    if (exc)
+    {
+        MonoString* exc_str = mono_object_to_string(exc, NULL);
+        char* utf8 = mono_string_to_utf8(exc_str);
+        final_printf( "Exception: %s\n", utf8);
+        mono_free(utf8);
+        return NULL;
+    }
+    return result;
+}
+
+void* Mono_New_Object(void* Klass)
+{
+    if (!Klass)
+    {
+        ffinal_printf("Klass pointer is null.\n");
+        return 0;
+    }
+    void* Obj = mono_object_new(Root_Domain, Klass);
+    if (!Obj)
+    {
+        ffinal_printf("Failed to Create new object\n");
+    }
+    return Obj;
 }

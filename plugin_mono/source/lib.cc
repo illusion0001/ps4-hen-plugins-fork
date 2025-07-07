@@ -1,3 +1,6 @@
+extern "C"
+{
+
 #include "../../common/entry.h"
 
 #include <stdint.h>
@@ -61,7 +64,7 @@ void PrintTimeTick(void)
             if (app_exe)
             {
                 App_Exe = app_exe;
-                void (*createDevKitPanel)(void*) = (void*)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.TopMenu", "AreaManager", "createDevKitPanel", 0);
+                void (*createDevKitPanel)(void*) = (void (*)(void*))Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.TopMenu", "AreaManager", "createDevKitPanel", 0);
                 printf("createDevKitPanel 0x%p\n", createDevKitPanel);
                 if (createDevKitPanel)
                 {
@@ -171,6 +174,7 @@ attr_public int plugin_load(struct SceEntry* args)
 {
     mkdir(BASE_PATH, 0777);
     mkdir(SHELLUI_DATA_PATH, 0777);
+    mkdir(USER_PLUGIN_PATH, 0777);
     write_file(SHELLUI_HEN_SETTINGS, data_hen_settings_xml, data_hen_settings_xml_len);
     open_console();
     printf("====\n\nHello from mono module\n\n====\n");
@@ -185,3 +189,4 @@ attr_public int plugin_load(struct SceEntry* args)
     return 0;
 }
 
+}
