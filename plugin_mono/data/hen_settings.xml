@@ -5,7 +5,7 @@
       <!-- The IDs must match ini keys! -->
       <toggle_switch id="exploit_fixes" title="Enable exploit fixes" description="Attempts to repatch bad/missing patches that should have been made by the exploit.&#xa;This helps ensure system stability after the initial jailbreak process." value="0"/>
       <toggle_switch id="mmap_patches" title="Enable memory mapping patches" description="Enable memory mapping patches for decrypting binary files.&#xa;These patches allow the system to properly handle encrypted executables and libraries." value="0"/>
-      <toggle_switch id="block_updates" title="Block firmware updates" description="Block console firmware updates by unmounting the `/update` partition.&#xa;This prevents accidental firmware updates that could patch the exploits." value="0" confirm="Are you sure you want to change this setting? Disabling might lead to accidental updates." confirm_phrase="Yes,No" />
+      <toggle_switch id="block_updates" title="Block firmware updates" description="Block console firmware updates by unmounting the `/update` partition.&#xa;This prevents accidental firmware updates that could patch the exploits." value="0" confirm="Are you sure you want to disable this setting? Disabling might lead to accidental updates." confirm_phrase="Yes,No" />
       <toggle_switch id="disable_aslr" title="Disable userland ASLR" description="Disable userland ASLR (Address Space Layout Randomization).&#xa;Disabling it can improve compatibility with homebrew applications, debuggers, and cheats." value="0"/>
       <toggle_switch id="nobd_patches" title="Enable NoBD patches" description="NoBD (No Blu-ray Drive) patches - allows system updates without a working Blu-ray drive." value="0"/>
     <list id="target_id" title="Target ID spoofer" description="Changes the console's reported Target ID for development or region-specific functionality.">
@@ -28,14 +28,13 @@
       <list_item id="target_id_0x8F" title="Brazil" value="0x8F"/>
       <list_item id="target_id_0xA0" title="Kratos (Arcade Cabinet)" value="0xA0"/>
     </list>
-      <toggle_switch id="skip_patches" title="Skip userland patches" description="Skip applying SceShellCore, SceShellUI, and RemotePlay patches.&#xa;Useful for testkit users." value="0"/>
+      <toggle_switch id="skip_patches" title="Skip userland patches" description="Skip applying SceShellCore, SceShellUI, and RemotePlay patches.&#xa;Useful for testkit users." value="0" confirm="Are you sure you want to enable this? Enabling this will not allow homebrew apps to launch." confirm_phrase="Yes,No"/>
       <toggle_switch id="upload_prx" title="Write HEN plugin files to HDD" description="Write the default HEN plugin PRX files to the console's hard drive.&#xa;Enabling this is recommended for first-time setup." value="0"/>
-      <toggle_switch id="enable_plugins" title="Enable plugin system" description="Enable HEN plugin file loading and execution system.&#xa;This feature activates the plugin subsystem that allows loading of additional PRX modules to extend HEN's capabilities.&#xa;Such as this extended settings menu."  confirm="Are you sure you want to change this setting? If disabling will not allow the following features:&#xa;★ HEN Settings Menu&#xa;FTP Server&#xa;Kernel Log Server&#xa;Plugins load for apps" confirm_phrase="Yes,No" value="0"/>
+      <toggle_switch id="enable_plugins" title="Enable plugin system" description="Enable HEN plugin file loading and execution system.&#xa;This feature activates the plugin subsystem that allows loading of additional PRX modules to extend HEN's capabilities.&#xa;Such as this extended settings menu."  confirm="Are you sure you want to disable this setting? Disabling this will not allow the following features:&#xa;★ HEN Settings Menu&#xa;FTP Server&#xa;Kernel Log Server&#xa;Plugins load for apps" confirm_phrase="Yes,No" value="0"/>
     </setting_list>
+    <link id="id_plugin_manager" title="Plugin Manager" description="Manages plugins installed under `/data/hen/plugins`.&#xa;Plugins will be loaded on game (BigApp) launch.&#xa;Currently only supports enabling from `all` section for now." file="HEN/data/PluginManager.xml" />
     <link id="id_game_package_installer_hdd" title="Install Package from Hard Disk" description="Place package files into /data/pkg.&#xa;Recursive path not supported." file="PkgInstaller/data/pkginstaller_hdd.xml" />
     <link id="id_game_package_installer_usb" title="Install Package from USB Storage" description="Place package files into root of USB Storage.&#xa;Recursive path not supported." file="PkgInstaller/data/pkginstaller_usb.xml" />
-    <!--
     <button id="id_restart_shellui" title="Restart ShellUI" description="Restarts ShellUI."/>
-    -->
   </setting_list>
 </system_settings>

@@ -19,7 +19,7 @@ COMMON_DIR    := ../common
 # Libraries linked into the ELF.
 LIBS := -lSceLibcInternal -lkernel
 
-EXTRAFLAGS := -fvisibility=hidden $(DEBUG_FLAGS) $(LOG_TYPE) -fcolor-diagnostics -Wall
+EXTRAFLAGS := -fvisibility=hidden $(DEBUG_FLAGS) $(LOG_TYPE) -fcolor-diagnostics -Wall -Wno-unused-function
 
 # You likely won't need to touch anything below this point.
 # Root vars

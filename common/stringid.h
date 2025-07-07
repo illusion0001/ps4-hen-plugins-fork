@@ -3,8 +3,12 @@
 #include <stdint.h>
 #include <wchar.h>
 
+static
+#if defined(__cplusplus)
+constexpr
+#endif
 // https://github.com/icemesh/StringId/blob/main/StringId64/main.c
-static const uint64_t ToStringId64A(const char* str)
+uint64_t ToStringId64A(const char* str)
 {
 	uint64_t base = 0xCBF29CE484222325;
 	if(*str)
@@ -16,7 +20,11 @@ static const uint64_t ToStringId64A(const char* str)
 	return base;
 }
 
-static const uint64_t ToStringId64W(const wchar_t* str)
+static
+#if defined(__cplusplus)
+constexpr
+#endif
+uint64_t ToStringId64W(const wchar_t* str)
 {
 	uint64_t base = 0xCBF29CE484222325;
 	if(*str)
