@@ -42,9 +42,14 @@ static int chmodRootDirForBug86309_Hook(const void* param_1, const void* param_2
     strncpy0(diskinfo.m_titleid, my_param_4->m_titleid, sizeof(diskinfo.m_titleid));
     strncpy0(diskinfo.m_category, my_param_4->m_category, sizeof(diskinfo.m_category));
     strncpy0(diskinfo.m_appver, my_param_4->m_appver, sizeof(diskinfo.m_appver));
-    char filep[260] = {0};
+    char filep[260];
+    memset(filep, 0, sizeof(filep));
     snprintf(filep, _countof(filep) - 1, "/user" TEMP_INFO_PATH "/%s/" TEMP_INFO_FILE, my_param_4->m_titleid);
     write_file(filep, &diskinfo, sizeof(diskinfo));
+    // temporary, write raw struct to disk to inspect them if it's wrong
+    memset(filep, 0, sizeof(filep));
+    snprintf(filep, _countof(filep) - 1, "/user" TEMP_INFO_PATH "/%s/" TEMP_INFO_FILE_BIN, my_param_4->m_titleid);
+    write_file(filep, my_param_4, 4096);
     return chmodRootDirForBug86309_Original.ptr(param_1, param_2, app_pid);
 }
 
