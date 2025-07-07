@@ -1,3 +1,5 @@
+extern "C"
+{
 #include "settings_menu.h"
 #include "../../../common/file.h"
 #include "../../../common/function_ptr.h"
@@ -6,14 +8,22 @@
 #include "../../../common/plugin_common.h"
 #include "../../../common/stringid.h"
 #include <stdio.h>
+
+#include <dirent.h>
 #include "../mono.h"
 
 #include <stdbool.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stddef.h>
+#include <signal.h>
+#include <pthread.h>
+
+#include "../../../common/syscall.h"
 
 #include "../ini.h"
+#include "../shellui_mono.h"
+}
 
 typedef enum
 {
@@ -141,7 +151,7 @@ static void SetupSettingsRoot(const char* xml)
                 buf2,
                 _countof(buf2),
                 REPLACE_LINE);
-    //printf("New str:\n%s\n", buf2);
+    // printf("New str:\n%s\n", buf2);
     mono_free(xml);
     memset(buf, 0, sizeof(buf));
     static const uint8_t bom_header[] = {0xEF, 0xBB, 0xBF};
@@ -149,6 +159,98 @@ static void SetupSettingsRoot(const char* xml)
     strncat(buf, buf2, strlen(buf2));
     strncpy(buf_fixed, buf, strlen(buf));
     buflen = strlen(buf_fixed);
+}
+
+static bool g_PluginsListRun = false;
+static pthread_t g_PluginsRunThread = 0;
+static uint64_t g_PageID = 0;
+
+static void UI_RequestReset(void)
+{
+    UI_ResetItem(ID_WAIT);
+    ffinal_printf("sent reset!\n");
+}
+
+static void RunPluginsBuild(void)
+{
+    struct dirent* entry;
+    DIR* dp = opendir(USER_PLUGIN_PATH);
+    if (!dp)
+    {
+        perror("opendir");
+        puts("Unable to open `" USER_PLUGIN_PATH "`.");
+    }
+    uint64_t nPrx = 0;
+    while ((entry = readdir(dp)))
+    {
+        const char* filename = entry->d_name;
+        if (endsWith(filename, ".prx") || endsWith(filename, ".sprx"))
+        {
+            char prx_path[260] = {0};
+            snprintf(prx_path, _countof(prx_path) - 1, USER_PLUGIN_PATH "/%s", filename);
+            int mod = 0;
+            // Don't EVER trust user modules that they won't put malicious code in `module_start`
+            // sceKernelLoadStartModule will always run `module_start` and even CRT startup sequences.
+            // Using syscall should be safest way to just get the info and close it.
+            int ret = sys_dynlib_load_prx(prx_path, &mod);
+            if (ret == 0 && mod > 0)
+            {
+                const char* pluginName = 0;
+                const char* pluginDesc = 0;
+                const char* pluginAuth = 0;
+                const char* pluginVersion = 0;
+                sys_dynlib_dlsym(mod, "g_pluginName", &pluginName);
+                sys_dynlib_dlsym(mod, "g_pluginDesc", &pluginDesc);
+                sys_dynlib_dlsym(mod, "g_pluginAuth", &pluginAuth);
+                sys_dynlib_dlsym(mod, "g_pluginVersion", &pluginVersion);
+                if (!pluginName || !pluginDesc || !pluginAuth || !pluginVersion)
+                {
+                    sys_dynlib_unload_prx(mod);
+                    continue;
+                }
+                pluginName = *(const char**)pluginName;
+                pluginDesc = *(const char**)pluginDesc;
+                pluginAuth = *(const char**)pluginAuth;
+                pluginVersion = *(const char**)pluginVersion;
+                char desc[4096] = {0};
+                snprintf(desc, _countof_1(desc), "Path: %s\nAuthor: %s\nDescription: %s", prx_path, pluginAuth, pluginDesc);
+                void* item = UI_NewElementData(ToggleSwitch, prx_path, pluginName, desc, 0);
+                if (item)
+                {
+                    UI_AddItem(item);
+                    nPrx++;
+                }
+                sys_dynlib_unload_prx(mod);
+            }
+        }
+    }
+    if (nPrx == 0)
+    {
+        puts("No plugins found.");
+    }
+    closedir(dp);
+    UI_RequestReset();
+}
+
+static void* test_thread(void* a)
+{
+    mono_thread_attach(Root_Domain);
+    g_PluginsListRun = true;
+    (void)a;
+    RunPluginsBuild();
+    g_PluginsRunThread = g_PluginsListRun = false;
+    pthread_exit(0);
+    return 0;
+}
+
+static void BuildPluginsList2(void)
+{
+    RunPluginsBuild();
+    return;
+    // this isn't really reliable
+    // so i'm forced to do it in OnPageActiviate thread
+    g_PluginsRunThread = g_PluginsListRun = 0;
+    pthread_create(&g_PluginsRunThread, 0, test_thread, 0);
 }
 
 uiTYPEDEF_FUNCTION_PTR(void*, ReadResourceStream_Original, void* inst, void* string);
@@ -160,22 +262,13 @@ static void* ReadResourceStream(void* inst, MonoString* filestring)
         static void* mscorlib_ptr = 0;
         if (!mscorlib_ptr)
         {
-            char mscorlib_sprx[260] = {};
-            const char* sandbox_path = sceKernelGetFsSandboxRandomWord();
-            if (sandbox_path)
-            {
-                snprintf(mscorlib_sprx, sizeof(mscorlib_sprx), "/%s/common/lib/mscorlib.dll", sandbox_path);
-                mscorlib_ptr = mono_get_image(mscorlib_sprx);
-            }
+            mscorlib_ptr = GetMsCorlib();
         }
         const uint64_t s = wSID(filestring->str);
         printf("SID: 0x%lx\n", s);
         switch (s)
         {
-            // c23 doesn't support function constexpr yet
-            // this is the workaround for now
-            // case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.SettingsRoot.data.settings_root.xml"):
-            case 0x625E2DDDEC3244C2:
+            case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.SettingsRoot.data.settings_root.xml"):
             {
                 void* stream = ReadResourceStream_Original.ptr(inst, filestring);
                 // must be utf8 with bom, parser doesn't like utf16
@@ -190,26 +283,35 @@ static void* ReadResourceStream(void* inst, MonoString* filestring)
                 }
                 break;
             }
-            // case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.hen_settings.xml"):
-            case 0xE6168C18F98D1DF6:
+            case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.hen_settings.xml"):
             {
                 return Mono_File_Stream(mscorlib_ptr, SHELLUI_HEN_SETTINGS);
             }
-            // case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.external_hdd.xml"):
-            case 0x959FE82777191437:
+            case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.external_hdd.xml"):
             {
                 return Mono_File_Stream(mscorlib_ptr, SHELLUI_DATA_PATH "/external_hdd.xml");
             }
-            // case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.PkgInstaller.data.pkginstaller.xml"):
-            case 0x8a00500dee1b4143:
-            // case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.PkgInstaller.data.pkginstaller_usb.xml"):
-            case 0x6186e56a05de0492:
-            // case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.PkgInstaller.data.pkginstaller_hdd.xml"):
-            case 0xf3591e9176d4dd3c:
+            case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.PkgInstaller.data.pkginstaller.xml"):
+            case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.PkgInstaller.data.pkginstaller_usb.xml"):
+            case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.PkgInstaller.data.pkginstaller_hdd.xml"):
             {
                 extern bool g_only_hdd;
-                g_only_hdd = s == 0xf3591e9176d4dd3c;
+                constexpr uint64_t tmp = SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.PkgInstaller.data.pkginstaller_hdd.xml");
+                g_only_hdd = s == tmp;
                 return ReadResourceStream_Original.ptr(inst, Mono_New_String("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.PkgInstaller.data.pkginstaller.xml"));
+            }
+            case SID("Sce.Vsh.ShellUI.src.Sce.Vsh.ShellUI.Settings.Plugins.HEN.data.PluginManager.xml"):
+            {
+                // clang-format off
+                static const char xml_start[] =
+                    "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n"
+                    "<system_settings version=\"1.0\" plugin=\"settings_root_plugin\">\n"
+                    "  <setting_list id=\"id_plugin_manager\" title=\"Plugins Manager\">\n"
+                    "  <message id=\"" ID_WAIT "\" title=\"msg_wait\" busyindicator=\"true\"/>\n"
+                    "  </setting_list>\n"
+                    "</system_settings>\n";
+                // clang-format on
+                return Mono_New_Stream(mscorlib_ptr, xml_start, sizeof(xml_start) - 1);
             }
         }
     }
@@ -218,17 +320,13 @@ static void* ReadResourceStream(void* inst, MonoString* filestring)
 
 static void UploadResourceStreamBranch(void)
 {
-    const char* sandbox_path = sceKernelGetFsSandboxRandomWord();
-    if (sandbox_path)
     {
-        char mscorlib_sprx[260] = {};
-        snprintf(mscorlib_sprx, sizeof(mscorlib_sprx), "/%s/common/lib/mscorlib.dll", sandbox_path);
-        void* mscorlib_ptr = mono_get_image(mscorlib_sprx);
+        void* mscorlib_ptr = GetMsCorlib();
         if (mscorlib_ptr)
         {
-            static const char namespace[] = "Assembly";
-            static const char method[] = "GetManifestResourceStream";
-            const uintptr_t ctor = (uintptr_t)Mono_Get_Address_of_Method(mscorlib_ptr, "System.Reflection", namespace, method, 1);
+            static const char ns[] = "Assembly";
+            static const char mm[] = "GetManifestResourceStream";
+            const uintptr_t ctor = (uintptr_t)Mono_Get_Address_of_Method(mscorlib_ptr, "System.Reflection", ns, mm, 1);
             if (ctor)
             {
                 const uintptr_t pHook = CreatePrologueHook(ctor, 17);
@@ -245,23 +343,19 @@ static void UploadResourceStreamBranch(void)
                 Notify("",
                        "Failed to resolve %s.%s!\n"
                        "Settings menu will not be patched.\n",
-                       namespace,
-                       method);
+                       ns,
+                       mm);
             }
         }
     }
 }
 
-enum ShellUIElementType
-{
-    Invalid = 0,
-    List = 5,
-    ToggleSwitch = 8,
-};
-
 uiTYPEDEF_FUNCTION_PTR(void, OnPress_Original, const void* p1, const void* p2, const void* p3);
 uiTYPEDEF_FUNCTION_PTR(void, OnPreCreate_Original, const void* p1, const void* p2, const void* p3);
 uiTYPEDEF_FUNCTION_PTR(void, OnPageActivating_Original, const void* p1, const void* p2, const void* p3);
+uiTYPEDEF_FUNCTION_PTR(void, OnCheckVisible_Original, const void* p1, const void* p2, const void* p3);
+uiTYPEDEF_FUNCTION_PTR(void, OnConfirm_Original, const void* p1, const void* p2);
+uiTYPEDEF_FUNCTION_PTR(void, OnPressed_Original, const void* p1, const void* p2);
 
 static bool IsValidElementType(MonoObject* Type)
 {
@@ -281,42 +375,46 @@ static bool IsValidElementType(MonoObject* Type)
     return r;
 }
 
-static void ReadWriteLocalSettings(MonoObject* Type, const char* Id, const char* Value, bool want_read, char* data_out, const size_t data_out_buf_size)
+static void ReadWriteLocalSettings(MonoObject* Type, const char* ini_path, const char* ini_section, const char* Id, const char* Value, bool want_read, char* data_out, const size_t data_out_buf_size)
 {
-    final_printf("enter\n");
+    ffinal_printf("enter\n");
+    ffinal_printf("ini_path %s\n", ini_path);
+    ffinal_printf("ini_section %s\n", ini_section);
     if (want_read)
     {
-        INIFile* ini = ini_load(HDD_INI_PATH);
+        INIFile* ini = ini_load(ini_path);
         if (!ini)
         {
-            final_printf("Failed to load `" HDD_INI_PATH "`\n");
+            final_printf("Failed to load `%s`\n", ini_path);
             return;
         }
-        char* v = ini_get(ini, HEN_SECTION, Id);
+        char* v = ini_get(ini, ini_section, Id);
         const char* v2 = v ? v : "";
         const size_t sv2 = strlen(v2);
         memcpy(data_out, v2, sv2 > data_out_buf_size ? data_out_buf_size - 1 : sv2);
         if (!v)
         {
-            ini_set(ini, HEN_SECTION, Id, "0");
+            ini_set(ini, ini_section, Id, "0");
             ini_save(ini);
         }
         ini_free(ini);
     }
     else
     {
-        INIFile* ini = ini_load(HDD_INI_PATH);
+        INIFile* ini = ini_load(ini_path);
         if (!ini)
         {
-            final_printf("Failed to load `" HDD_INI_PATH "`\n");
+            final_printf("Failed to load `%s`\n", ini_path);
             return;
         }
-        ini_set(ini, HEN_SECTION, Id, Value);
+        ini_set(ini, ini_section, Id, Value);
         ini_save(ini);
         ini_free(ini);
     }
-    final_printf("finish %s\n", want_read ? "read" : "write");
+    ffinal_printf("finish %s\n", want_read ? "read" : "write");
 }
+
+extern "C" int kill(int, int);
 
 static void NewOnPress(const void* p1, const void* element, const void* p3)
 {
@@ -327,9 +425,44 @@ static void NewOnPress(const void* p1, const void* element, const void* p3)
     final_printf("Id %s Value %s Type %d\n", Id, Value, Type->value.u32);
     if (IsValidElementType(Type))
     {
-        ReadWriteLocalSettings(Type, Id, Value, false, 0, 0);
+        const char* p = 0;
+        const char* i = 0;
+        switch (g_PageID)
+        {
+            case wSID(L"payload_options"):
+            {
+                p = HDD_INI_PATH;
+                i = HEN_SECTION;
+                break;
+            }
+            case wSID(L"id_plugin_manager"):
+            {
+                p = PLUGINS_INI_PATH;
+                i = PLUGINS_ALL_SECTION;
+                break;
+            }
+        }
+        if (p && i)
+        {
+            ReadWriteLocalSettings(Type, p, i, Id, Value, false, 0, 0);
+        }
     }
-    // id_restart_shellui
+    // handle buttons
+    if (Type->value.u32 == Button)
+    {
+        switch (SID(Id))
+        {
+            case SID("id_restart_shellui"):
+            {
+                final_printf("kill(getpid(), SIGKILL) %d\n", kill(getpid(), SIGKILL));
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+    }
     OnPress_Original.ptr(p1, element, p3);
 }
 
@@ -342,14 +475,186 @@ static void NewOnPreCreate(void* p1, const void* element, void* p3)
     MonoObject* Type = (MonoObject*)Mono_Get_Property(settings, element, "Type");
     if (IsValidElementType(Type))
     {
-        ReadWriteLocalSettings(Type, Id, Value, true, buf, sizeof(buf));
+        const char* p = 0;
+        const char* i = 0;
+        switch (g_PageID)
+        {
+            case wSID(L"payload_options"):
+            {
+                p = HDD_INI_PATH;
+                i = HEN_SECTION;
+                break;
+            }
+            case wSID(L"id_plugin_manager"):
+            {
+                p = PLUGINS_INI_PATH;
+                i = PLUGINS_ALL_SECTION;
+                break;
+            }
+        }
+        if (p && i)
+        {
+            ReadWriteLocalSettings(Type, p, i, Id, Value, true, buf, sizeof(buf));
+        }
         if (buf[0])
         {
             Mono_Set_Property(settings, element, "Value", Mono_New_String(buf));
         }
     }
     final_printf("Id %s Value %s (read %s) Type %d\n", Id, Value, buf, Type->value.u32);
+    // Disable builtin user plugins from being altered
+    switch (SID(Id))
+    {
+        case SID("/data/hen/plugins/plugin_bootloader.prx"):
+        case SID("/data/hen/plugins/plugin_loader.prx"):
+        case SID("/data/hen/plugins/plugin_mono.prx"):
+        case SID("/data/hen/plugins/plugin_server.prx"):
+        case SID("/data/hen/plugins/plugin_shellcore.prx"):
+        {
+            const int v = false;
+            Mono_Set_Property(settings, element, "Enabled", &v);
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
     OnPreCreate_Original.ptr(p1, element, p3);
+}
+
+static void NewOnPageActivating(void* p1, const void* element, MonoObject* p3)
+{
+    enum TransPush
+    {
+        OnNone = 0,
+        OnPush,
+        OnPop,
+    };
+    const uint32_t uPush = p3->value.u32;
+    if (uPush == OnPush || uPush == OnPop)
+    {
+        const void* settings = Mono_Get_Class(App_Exe, "Sce.Vsh.ShellUI.Settings.Core", "SettingPage");
+        const MonoString* Id = (MonoString*)Mono_Get_Property(settings, element, "Id");
+        final_printf("id %ls\n", Id->str);
+        const uint64_t local_pageid = wSID(Id->str);
+        g_PageID = local_pageid;
+        switch (uPush)
+        {
+            case OnPush:
+            {
+                switch (local_pageid)
+                {
+                    case wSID(L"id_plugin_manager"):
+                    {
+                        BuildPluginsList2();
+                        break;
+                    }
+                }
+                break;
+            }
+            case OnPop:
+            {
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+    }
+    OnPageActivating_Original.ptr(p1, element, p3);
+}
+
+static void NewOnConfirm(void* _this, void* action_)
+{
+    const void* settings = Mono_Get_Class(App_Exe, "Sce.Vsh.ShellUI.Settings.Core", "SettingElement");
+    const char* Id = mono_string_to_utf8(Mono_Get_Property(settings, _this, "Id"));
+    const char* Value = mono_string_to_utf8(Mono_Get_Property(settings, _this, "Value"));
+    final_printf("Id %s Value %s\n", Id, Value);
+    bool skip_confirm = false;
+    // Confirm prompt when disabling
+    if (Value && Value[0] == '1')
+    {
+        switch (SID(Id))
+        {
+            case SID("enable_plugins"):
+            case SID("block_updates"):
+            {
+                skip_confirm = true;
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+    }
+    // the other way around
+    else if (Value && Value[0] == '0')
+    {
+        switch (SID(Id))
+        {
+            case SID("skip_patches"):
+            {
+                skip_confirm = true;
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+    }
+    if (skip_confirm && OnPressed_Original.ptr)
+    {
+        // Commit the value to disk
+        OnPressed_Original.ptr(_this, Mono_Get_Property(settings, _this, "Ui"));
+        return;
+    }
+    OnConfirm_Original.ptr(_this, action_);
+}
+
+static void NewOnCheckVisible(const void* param1, const void* e, const void* args)
+{
+    const void* settings = Mono_Get_Class(App_Exe, "Sce.Vsh.ShellUI.Settings.Core", "SettingElement");
+    const MonoString* Id = (MonoString*)Mono_Get_Property(settings, e, "Id");
+    const MonoObject* Type = (MonoObject*)Mono_Get_Property(settings, e, "Type");
+    switch (wSID(Id->str))
+    {
+        case wSID(L"" ID_WAIT):
+        {
+            ffinal_printf("Match %ls\n", Id->str);
+            if (Type->value.u32 == Message)
+            {
+                const int v = false;
+                Mono_Set_Property(settings, e, "Visible", &v);
+            }
+            break;
+        }
+    }
+    OnCheckVisible_Original.ptr(param1, e, args);
+}
+
+static void NewOnPageDeactivating(const void* param1, const void* p, const void* args)
+{
+    const void* settings = Mono_Get_Class(App_Exe, "Sce.Vsh.ShellUI.Settings.Core", "SettingPage");
+    const MonoString* Id = (MonoString*)Mono_Get_Property(settings, p, "Id");
+    ffinal_printf("Id %ls\n", Id->str);
+    switch (wSID(Id->str))
+    {
+        // kill it, kill it now!
+        case wSID(L"id_plugin_manager"):
+        {
+            if (g_PluginsRunThread > 0)
+            {
+                pthread_cancel(g_PluginsRunThread);
+                pthread_join(g_PluginsRunThread, 0);
+                g_PluginsRunThread = 0;
+            }
+        }
+    }
+    g_PageID = 0;
 }
 
 void UploadOnBranch(void* app_exe)
@@ -357,7 +662,7 @@ void UploadOnBranch(void* app_exe)
     const uintptr_t OnPress = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.Settings.SettingsRoot", "SettingsRootHandler", "OnPress", 2);
     if (OnPress)
     {
-        const uintptr_t pHook = CreatePrologueHook(OnPress,15);
+        const uintptr_t pHook = CreatePrologueHook(OnPress, 15);
         if (pHook)
         {
             OnPress_Original.addr = pHook;
@@ -373,6 +678,55 @@ void UploadOnBranch(void* app_exe)
             OnPreCreate_Original.addr = pHook;
             WriteJump64(OnPreCreate, (uintptr_t)NewOnPreCreate);
         }
+    }
+    const uintptr_t OnPageActivating = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.Settings.SettingsRoot", "SettingsRootHandler", "OnPageActivating", 2);
+    if (OnPageActivating)
+    {
+        const uintptr_t pHook = CreatePrologueHook(OnPageActivating, 15);
+        if (pHook)
+        {
+            OnPageActivating_Original.addr = pHook;
+            WriteJump64(OnPageActivating, (uintptr_t)NewOnPageActivating);
+        }
+    }
+    const int app_exe_h = sceKernelLoadStartModule("/app0/psm/Application/app.exe.sprx", 0, 0, 0, 0, 0);
+    if (app_exe_h > 0)
+    {
+        struct OrbisKernelModuleInfo info = {0};
+        info.size = sizeof(info);
+        const int r = sceKernelGetModuleInfo(app_exe_h, &info);
+        if (r == 0)
+        {
+            const void* mm_p = info.segmentInfo[0].address;
+            const uint64_t mm_s = info.segmentInfo[0].size;
+            const uintptr_t OnCheckVisible = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.Settings.SettingsRoot", "SettingsRootHandler", "OnCheckVisible", 2);
+            if (OnCheckVisible)
+            {
+                const size_t srclen = 6;
+                const uintptr_t pHook = CreatePrologueHook(OnCheckVisible, srclen);
+                if (pHook)
+                {
+                    OnCheckVisible_Original.addr = pHook;
+                    Make32to64Jmp((uintptr_t)mm_p, mm_s, OnCheckVisible, (uintptr_t)NewOnCheckVisible, srclen, false, 0);
+                }
+            }
+        }
+    }
+    const uintptr_t OnConfirm = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.Settings.Core", "SettingElement", "Confirm", 1);
+    if (OnConfirm)
+    {
+        const uintptr_t pHook = CreatePrologueHook(OnConfirm, 15);
+        if (pHook)
+        {
+            OnConfirm_Original.addr = pHook;
+            WriteJump64(OnConfirm, (uintptr_t)NewOnConfirm);
+        }
+    }
+    OnPressed_Original.v = Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.Settings.Core", "SettingElement", "OnPressed", 1);
+    const uintptr_t OnPageDeactivating = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.Settings.Core", "SettingsHandler", "OnPageDeactivating", 2);
+    if (OnPageDeactivating)
+    {
+        WriteJump64(OnPageDeactivating, (uintptr_t)NewOnPageDeactivating);
     }
 }
 
