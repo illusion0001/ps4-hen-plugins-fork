@@ -16,7 +16,7 @@ TARGET_ELF   := $(BUILD_FOLDER)/elf$(TYPE)/$(OUTPUT_PRX)
 TARGETSTUB   := $(OUTPUT_PRX).so
 
 # Libraries linked into the ELF.
-LIBS := -lSceLibcInternal -lkernel
+LIBS := -lSceLibcInternal -lkernel -ljbc
 
 EXTRAFLAGS := -fvisibility=hidden $(DEBUG_FLAGS) $(LOG_TYPE) -fcolor-diagnostics -Wall
 
@@ -65,7 +65,7 @@ $(BUILD_FOLDER)/prx$(TYPE):
 $(BUILD_FOLDER)/elf$(TYPE):
 	mkdir -p $(BUILD_FOLDER)/elf$(TYPE)
 
-$(TARGET): $(INTDIR) $(BUILD_FOLDER)/prx$(TYPE) $(BUILD_FOLDER)/elf$(TYPE) $(OBJS)
+$(TARGET): libjbc $(INTDIR) $(BUILD_FOLDER)/prx$(TYPE) $(BUILD_FOLDER)/elf$(TYPE) $(OBJS)
 	$(LD) $(INTDIR)/*.o -o $(TARGET_ELF).elf $(LDFLAGS)
 	$(TOOLCHAIN)/bin/$(CDIR)/create-fself -in=$(TARGET_ELF).elf -out=$(TARGET_ELF).oelf --lib=$(TARGET).prx --paid 0x3800000000000011
 
@@ -83,6 +83,9 @@ $(INTDIR)/%.o.stub: $(PROJDIR)/%.c
 
 $(INTDIR)/%.o.stub: $(PROJDIR)/%.cpp
 	$(CCX) -target x86_64-pc-linux-gnu -ffreestanding -nostdlib -fno-builtin -fPIC $(O_FLAG) -s -c -o $@ $<
+
+libjbc:
+	make -C ../extern/libjbc install
 
 send: $(TARGET)
 	curl -T $(TARGET).prx ftp://$(PS4_HOST):2121/data/hen/$(OUTPUT_PRX).prx
