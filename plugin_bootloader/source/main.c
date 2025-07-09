@@ -7,6 +7,8 @@
 #include "notify.h"
 #include "path.h"
 
+#include "../../extern/libjbc/libjbc.h"
+
 attr_public const char* g_pluginName = "bootloader";
 attr_public const char* g_pluginDesc = "Bootloader plugin.";
 attr_public const char* g_pluginAuth = "illusiony";
@@ -17,9 +19,23 @@ attr_public const char* g_pluginVersion = "Git Commit: " GIT_COMMIT
                                           "Git Commit Number: " GIT_NUM_STR
                                           "\n"
                                           "Built: " BUILD_DATE;
+attr_public int g_EnableTTY = 1;  // TODO: make it optional
+
+static void do_dup2(int console_fd)
+{
+    extern int dup2(int, int);
+    const int stdout_ = 1;
+    const int stderr_ = 2;
+    dup2(console_fd, stdout_);
+    dup2(console_fd, stderr_);
+}
 
 int32_t attr_public plugin_load(struct SceEntry* args, const void* atexit_handler)
 {
+    if (g_EnableTTY)
+    {
+        open_dev_console(do_dup2);
+    }
     final_printf("%s Plugin Started.\n", g_pluginName);
     final_printf("%s\n", g_pluginVersion);
     final_printf("Plugin Author(s): %s\n", g_pluginAuth);
