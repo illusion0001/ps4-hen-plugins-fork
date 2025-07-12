@@ -57,6 +57,18 @@ static int __attribute__((naked)) chmodRootDirForBug86309(const void* param_1, c
     }
 }
 
+static int RunPost(const void* mp, const uint64_t ms)
+{
+    // Unpatch ourselves by invaliding pattern match on next frame.
+    const uintptr_t caller = PatternScan(mp, ms, "e8 ? ? ? ? 48 89 df e8 ? ? ? ? 48 89 df e8 ? ? ? ? e8 ? ? ? ? 31 c0", 21);
+    if (caller)
+    {
+        sys_proc_memset(getpid(), caller, 0x90, 5);
+        return 0;
+    }
+    return 1;
+}
+
 static void RunPatch(void)
 {
     struct OrbisKernelModuleInfo info = {0};
@@ -76,7 +88,10 @@ static void RunPatch(void)
         if (chmodEntry)
         {
             Make32to64Jmp((uintptr_t)mm_p, mm_s, chmodEntry, (uintptr_t)chmodRootDirForBug86309, 5, true, &chmodRootDirForBug86309_Original.addr);
-            Notify("", "Shellcore code installed for application info");
+            if (RunPost(mm_p, mm_s) == 0)
+            {
+                Notify("", "Shellcore code installed for application info");
+            }
         }
         else
         {
