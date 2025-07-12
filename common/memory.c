@@ -92,13 +92,12 @@ uintptr_t PatternScan(const void* module_base, const uint64_t module_size, const
 
 static int jmpcallbytes = 5;
 
-void WriteJump32(const uintptr_t src, const uintptr_t dst, const uint64_t len, const bool call)
+void WriteJump32_pid(const int pid, const uintptr_t src, const uintptr_t dst, const uint64_t len, const bool call)
 {
     if (!src || !dst || len < jmpcallbytes)
     {
         return;
     }
-    const int pid = getpid();
     if (len != jmpcallbytes)
     {
         sys_proc_memset(pid, src, 0x90, len);
@@ -109,15 +108,24 @@ void WriteJump32(const uintptr_t src, const uintptr_t dst, const uint64_t len, c
     sys_proc_rw(pid, src + 1, &relativeAddress, sizeof(relativeAddress), 1);
 }
 
+void WriteJump32(const uintptr_t src, const uintptr_t dst, const uint64_t len, const bool call)
+{
+    WriteJump32_pid(getpid(), src, dst, len, call);
+}
+
 const static uint8_t JMPstub[] = {
     0xFF, 0x25, 0x00, 0x00, 0x00, 0x00,  // jmp qword ptr [$+6]
 };
 
-void WriteJump64(const uintptr_t src, const uintptr_t dst)
+void WriteJump64_pid(const int pid, const uintptr_t src, const uintptr_t dst)
 {
-    const int pid = getpid();
     sys_proc_rw(pid, src, JMPstub, sizeof(JMPstub), 1);
     sys_proc_rw(pid, src + sizeof(JMPstub), &dst, sizeof(dst), 1);
+}
+
+void WriteJump64(const uintptr_t src, const uintptr_t dst)
+{
+    WriteJump64_pid(getpid(), src, dst);
 }
 
 uintptr_t ReadLEA32(uintptr_t Address, size_t offset, size_t lea_size, size_t lea_opcode_size)
