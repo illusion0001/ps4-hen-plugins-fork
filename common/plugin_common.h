@@ -18,3 +18,6 @@
 // Takes hardcoded input string 2 to strlen against during compile time.
 // startsWith(input_1, "input 2");
 #define startsWith(str1, str2) (strncmp(str1, str2, __builtin_strlen(str2)) == 0)
+
+// Writes null term to copied string
+#define strncpy0(d, s, sz) strncpy(d, s, sz), d[sz - 1] = '\0'
