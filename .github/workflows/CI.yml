@@ -70,6 +70,7 @@ jobs:
       run: |
         make -C plugin_example
         make -C plugin_mono
+        make -C plugin_shellcore
         make -C plugin_server
 
     - name: Zip
