@@ -24,6 +24,8 @@ uintptr_t PatternScan(const void* module_base, const uint64_t module_size, const
 
 void WriteJump32(const uintptr_t src, const uintptr_t dst, const uint64_t len, const bool call);
 void WriteJump64(const uintptr_t src, const uintptr_t dst);
+void WriteJump32_pid(const int pid, const uintptr_t src, const uintptr_t dst, const uint64_t len, const bool call);
+void WriteJump64_pid(const int pid, const uintptr_t src, const uintptr_t dst);
 uintptr_t ReadLEA32(uintptr_t Address, size_t offset, size_t lea_size, size_t lea_opcode_size);
 void Make32to64Jmp(const uintptr_t textbase, const uintptr_t textsz, const uintptr_t src, const uintptr_t dst, const uint64_t srclen, const bool call, uintptr_t* src_out);
 void hex_dump(const uintptr_t data, const uint64_t size, const uintptr_t real);
