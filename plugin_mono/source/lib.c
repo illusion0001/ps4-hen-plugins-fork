@@ -174,7 +174,7 @@ attr_public int plugin_load(struct SceEntry* args)
     write_file(SHELLUI_HEN_SETTINGS, data_hen_settings_xml, data_hen_settings_xml_len);
     open_console();
     printf("====\n\nHello from mono module\n\n====\n");
-    if (__FINAL__ && file_exists_temp(g_pluginName) == 0)
+    if (0 && file_exists_temp(g_pluginName) == 0)
     {
         Notify("", "Attempted to load %s again! Did it crash previously?\n", g_pluginName);
         return 0;
