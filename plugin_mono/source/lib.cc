@@ -52,6 +52,26 @@ static void open_console(void)
     }
 }
 
+static void MainThreadCheck(void)
+{
+    const char* sandbox_path = sceKernelGetFsSandboxRandomWord();
+    if (sandbox_path)
+    {
+        char core_dll[260] = {};
+        snprintf(core_dll, sizeof(core_dll), "/%s/common/lib/Sce.PlayStation.Core.dll", sandbox_path);
+        void* ptr = mono_get_image(core_dll);
+        if (ptr)
+        {
+            void* check = Mono_Get_Address_of_Method(ptr, "Sce.PlayStation.Core.Runtime", "Diagnostics", "CheckRunningOnMainThread", 0);
+            if (check)
+            {
+                uint8_t ret = 0xc3;
+                sys_proc_rw(getpid(), (uintptr_t)check, &ret, sizeof(ret), 1);
+            }
+        }
+    }
+}
+
 void PrintTimeTick(void)
 {
     static bool once = false;
@@ -74,6 +94,7 @@ void PrintTimeTick(void)
             UploadNewCorelibStreamReader();
             UploadNewPkgInstallerPath(App_Exe);
             UploadOnBranch(App_Exe);
+            MainThreadCheck();
         }
         once = true;
     }
