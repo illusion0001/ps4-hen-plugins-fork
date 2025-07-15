@@ -83,3 +83,47 @@ void* UI_NewElementData(enum ShellUIElementType ElementType, const char* Id, con
     }
     return UI_CreateButton(btype, Id, Title, Title2, Icon);
 }
+
+void UI_Push(const char* page, const char* root)
+{
+    const void* uii = Mono_Get_InstanceEx(App_Exe, "Sce.Vsh.ShellUI.Settings.Core", "UIManager", "Instance");
+    if (!uii)
+    {
+        return;
+    }
+    static void* buttonmethod = 0;
+    if (!buttonmethod)
+    {
+        buttonmethod = Mono_Get_Address_of_Method(App_Exe, "Sce.Vsh.ShellUI.Settings.Core", "UIManager", "Push", 3);
+    }
+    if (buttonmethod)
+    {
+        enum
+        {
+            kDefault = 0,
+        };
+        void (*Push)(const void* i, MonoString*, MonoString*, const uint32_t pushTransType) = (void*)buttonmethod;
+        Push(uii, Mono_New_String(page), Mono_New_String(root && root[0] ? root : ""), kDefault);
+    }
+}
+
+void UI_PushPage(const char* page)
+{
+    UI_Push(page, 0);
+}
+
+void BootPage(const char* page)
+{
+    static void* buttonmethod = 0;
+    if (!buttonmethod)
+    {
+        buttonmethod = Mono_Get_Address_of_Method(App_Exe, "Sce.Vsh.ShellUI.AppSystem", "BootHelper", "BootAndAdd", 3);
+    }
+    if (buttonmethod)
+    {
+        bool (*boot_add)(void* s, void*, void*) = (void*)buttonmethod;
+        char url[1024] = {0};
+        snprintf(url, _countof_1(url), "pssettings:play?mode=settings&function=%s", page);
+        boot_add(Mono_New_String(url), 0, 0);
+    }
+}
