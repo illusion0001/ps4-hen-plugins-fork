@@ -58,6 +58,7 @@ endif
 
 bundle_data:
 	xxd -i data/hen_settings.xml | sed 's/^unsigned /static const unsigned /' > source/hen_settings.inc.c
+	xxd -i data/hen_settings_icon.png | sed 's/^unsigned /static const unsigned /' > source/hen_settings_icon.inc.c
 
 $(INTDIR):
 	mkdir -p $(INTDIR)
