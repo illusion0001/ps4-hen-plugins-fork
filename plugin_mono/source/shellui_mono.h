@@ -16,3 +16,6 @@ enum ShellUIElementType : uint32_t
 void UI_ResetItem(const char* id);
 void UI_AddItem(void* e);
 void* UI_NewElementData(enum ShellUIElementType ElementType, const char* Id, const char* Title, const char* Title2, const char* Icon);
+void UI_Push(const char* page, const char* root);
+void UI_PushPage(const char* page);
+void BootPage(const char* page);

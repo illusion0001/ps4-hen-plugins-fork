@@ -22,6 +22,7 @@ extern "C"
 
 #include "patches.h"
 
+#include "hen_settings_icon.inc.c"
 #include "hen_settings.inc.c"
 #include "../../common/file.h"
 
@@ -77,8 +78,6 @@ void PrintTimeTick(void)
     static bool once = false;
     if (!once)
     {
-        Root_Domain = mono_get_root_domain();
-        if (Root_Domain)
         {
             void* app_exe = mono_get_image("/app0/psm/Application/app.exe");
             if (app_exe)
@@ -92,8 +91,6 @@ void PrintTimeTick(void)
                 }
             }
             UploadNewCorelibStreamReader();
-            UploadNewPkgInstallerPath(App_Exe);
-            UploadOnBranch(App_Exe);
             MainThreadCheck();
         }
         once = true;
@@ -173,6 +170,28 @@ static int sceKernelLoadStartModuleInternalForMono_Hook(const char* param_1, voi
         RunPost(md);
         test = true;
     }
+    else if (test)
+    {
+        static bool once = false;
+        if (!once)
+        {
+            if (!Root_Domain)
+            {
+                Root_Domain = mono_get_root_domain();
+            }
+            if (Root_Domain)
+            {
+                App_Exe = mono_get_image("/app0/psm/Application/app.exe");
+                if (App_Exe)
+                {
+                    ffinal_printf("app_exe: 0x%p\n", App_Exe);
+                    UploadNewPkgInstallerPath(App_Exe);
+                    UploadOnBranch(App_Exe);
+                    once = true;
+                }
+            }
+        }
+    }
     return md;
 }
 
@@ -193,11 +212,13 @@ static void UploadMonoCall(void)
 
 attr_public int plugin_load(struct SceEntry* args)
 {
+    open_console();
     mkdir(BASE_PATH, 0777);
     mkdir(SHELLUI_DATA_PATH, 0777);
+    mkdir(SHELL_UI_ICONS_PATH, 0777);
     mkdir(USER_PLUGIN_PATH, 0777);
     write_file(SHELLUI_HEN_SETTINGS, data_hen_settings_xml, data_hen_settings_xml_len);
-    open_console();
+    write_file(SHELLUI_HEN_SETTINGS_ICON_PATH, data_hen_settings_icon_png, data_hen_settings_icon_png_len);
     printf("====\n\nHello from mono module\n\n====\n");
     if (0 && file_exists_temp(g_pluginName) == 0)
     {

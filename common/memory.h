@@ -7,8 +7,7 @@
 
 #include "cave.inc.c"
 
-#define _countof(a) sizeof(a) / sizeof(*a)
-#define _countof_1(a) (_countof(a) - 1)
+#include "plugin_common.h"
 
 /*
  * @brief Scan for a given byte pattern on a module

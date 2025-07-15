@@ -16,3 +16,5 @@
 
 #define SHELLUI_DATA_PATH BASE_PATH "/shellui_data"
 #define SHELLUI_HEN_SETTINGS SHELLUI_DATA_PATH "/hen_settings.xml"
+#define SHELL_UI_ICONS_PATH SHELLUI_DATA_PATH "/icons"
+#define SHELLUI_HEN_SETTINGS_ICON_PATH SHELL_UI_ICONS_PATH "/hen_settings_icon.png"

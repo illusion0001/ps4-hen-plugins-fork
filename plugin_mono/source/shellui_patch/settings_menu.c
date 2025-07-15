@@ -683,6 +683,96 @@ static void NewOnPageDeactivating(const void* param1, const void* p, const void*
     g_PageID = 0;
 }
 
+uiTYPEDEF_FUNCTION_PTR(void, StartSettingsPage_Original, const void* p1);
+uiTYPEDEF_FUNCTION_PTR(MonoString*, SettingsApp_GetItem, const void* p1, MonoString*);
+
+enum
+{
+    HasInstance,
+    NoHasInstance,
+};
+
+static void StartHENSettings(const int type)
+{
+    switch (type)
+    {
+        case HasInstance:
+        {
+            UI_PushPage("hen_settings.xml");
+            break;
+        }
+        case NoHasInstance:
+        {
+            BootPage("hen_settings");
+            break;
+        }
+    }
+}
+
+static void PSPlusStart(void)
+{
+    StartHENSettings(NoHasInstance);
+}
+
+static void NewStartSettingsPage(void* p1)
+{
+    if (p1)
+    {
+        ffinal_printf("SettingsApp_GetItem: 0x%p\n", SettingsApp_GetItem.ptr);
+        ffinal_printf("p1: 0x%p\n", p1);
+        MonoString* s = SettingsApp_GetItem.ptr(p1, Mono_New_String("function"));
+        switch (wSID(s->str))
+        {
+            case wSID(L"hen_settings"):
+            {
+                StartHENSettings(HasInstance);
+                return;
+            }
+            default:
+            {
+                break;
+            }
+        }
+    }
+    StartSettingsPage_Original.ptr(p1);
+}
+
+uiTYPEDEF_FUNCTION_PTR(void, TopMenuPluginSetimage_Original, void* param_1, void* param_2, void* param_3, void* param_4, void* param_5, void* param_6);
+uiTYPEDEF_FUNCTION_PTR(MonoString*, TopMenuPluginGetString_Original, MonoString* msg, void* msglist);
+
+static void NewTopMenuPluginSetimage(void* param_1, void* param_2, void* param_3, void* param_4, void* param_5, void* param_6)
+{
+    if (param_3)
+    {
+        MonoString* param_3s = (MonoString*)param_3;
+        switch (wSID(param_3s->str))
+        {
+            case wSID(L"cxml://TopMenuPlugin/tex_plus"):
+            {
+                param_3 =(void*) Mono_New_String("file:///user" SHELLUI_HEN_SETTINGS_ICON_PATH);
+            }
+        }
+    }
+    TopMenuPluginSetimage_Original.ptr(param_1, param_2, param_3, param_4, param_5, param_6);
+}
+
+static MonoString* NewTopMenuPluginGetString(MonoString* msg, void* msglist)
+{
+    ffinal_printf("msg->str: %ls\n", msg->str);
+    switch (wSID(msg->str))
+    {
+        case wSID(L"msg_psplus_long"):
+        {
+            return Mono_New_String("★ HEN Settings");
+        }
+        default:
+        {
+            break;
+        }
+    }
+    return TopMenuPluginGetString_Original.ptr(msg, msglist);
+}
+
 void UploadOnBranch(void* app_exe)
 {
     const uintptr_t OnPress = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.Settings.SettingsRoot", "SettingsRootHandler", "OnPress", 2);
@@ -736,6 +826,54 @@ void UploadOnBranch(void* app_exe)
                     Make32to64Jmp((uintptr_t)mm_p, mm_s, OnCheckVisible, (uintptr_t)NewOnCheckVisible, srclen, false, 0);
                 }
             }
+            const uintptr_t StartSettingsPage = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI", "SettingsApplication", "StartSettingsPage", 0);
+            SettingsApp_GetItem.v = Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI", "SettingsApplication", "get_Item", 1);
+            if (StartSettingsPage && SettingsApp_GetItem.v)
+            {
+                const size_t srclen = 6;
+                const uintptr_t pHook = CreatePrologueHook(StartSettingsPage, srclen);
+                if (pHook)
+                {
+                    StartSettingsPage_Original.addr = pHook;
+                    Make32to64Jmp((uintptr_t)mm_p, mm_s, StartSettingsPage, (uintptr_t)NewStartSettingsPage, srclen, false, 0);
+                }
+            }
+            const uintptr_t TopMenuPluginSetimage = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.TopMenu", "TopMenuPlugin", "setImage", 6);
+            if (TopMenuPluginSetimage)
+            {
+                const size_t srclen = 6;
+                const uintptr_t pHook = CreatePrologueHook(TopMenuPluginSetimage, srclen);
+                if (pHook)
+                {
+                    TopMenuPluginSetimage_Original.addr = pHook;
+                    Make32to64Jmp((uintptr_t)mm_p, mm_s, TopMenuPluginSetimage, (uintptr_t)NewTopMenuPluginSetimage, srclen, false, 0);
+                }
+            }
+            const uintptr_t TopMenuPluginGetString = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.TopMenu", "TopMenuPlugin", "GetString", 2);
+            if (TopMenuPluginGetString)
+            {
+                const size_t srclen = 6;
+                const uintptr_t pHook = CreatePrologueHook(TopMenuPluginGetString, srclen);
+                if (pHook)
+                {
+                    TopMenuPluginGetString_Original.addr = pHook;
+                    Make32to64Jmp((uintptr_t)mm_p, mm_s, TopMenuPluginGetString, (uintptr_t)NewTopMenuPluginGetString, srclen, false, 0);
+                }
+            }
+            const uint8_t ret = 0xc3;
+            const int my_pid = getpid();
+            // Hides PS Plus panel
+            const uintptr_t createOfflinePanel = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.TopMenu", "SystemAreaPluginBase", "createOfflinePanel", 1);
+            if (createOfflinePanel)
+            {
+                sys_proc_rw(my_pid, createOfflinePanel, &ret, sizeof(ret), 1);
+            }
+            // Hides you are offline panels
+            const uintptr_t InitProperty = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.TopMenu", "LiveAreaConfig", "InitProperty", 5);
+            if (InitProperty)
+            {
+                sys_proc_rw(my_pid, InitProperty, &ret, sizeof(ret), 1);
+            }
         }
     }
     const uintptr_t OnConfirm = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.Settings.Core", "SettingElement", "Confirm", 1);
@@ -750,9 +888,14 @@ void UploadOnBranch(void* app_exe)
     }
     OnPressed_Original.v = Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.Settings.Core", "SettingElement", "OnPressed", 1);
     const uintptr_t OnPageDeactivating = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.Settings.Core", "SettingsHandler", "OnPageDeactivating", 2);
-    if (OnPageDeactivating)
+    if (OnPageDeactivating && OnPressed_Original.v)
     {
         WriteJump64(OnPageDeactivating, (uintptr_t)NewOnPageDeactivating);
+    }
+    const uintptr_t SystemAreaIconPSPlus_LaunchPlugin = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.TopMenu", "SystemAreaIconPSPlus", "LaunchPlugin", 0);
+    if (SystemAreaIconPSPlus_LaunchPlugin)
+    {
+        WriteJump64(SystemAreaIconPSPlus_LaunchPlugin, (uintptr_t)PSPlusStart);
     }
 }
 
