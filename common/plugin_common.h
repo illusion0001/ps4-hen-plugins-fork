@@ -26,3 +26,6 @@
 
 // Writes null term to copied string
 #define strncpy0(d, s, sz) strncpy(d, s, sz), d[sz - 1] = '\0'
+
+#define _countof(a) sizeof(a) / sizeof(*a)
+#define _countof_1(a) (_countof(a) - 1)
