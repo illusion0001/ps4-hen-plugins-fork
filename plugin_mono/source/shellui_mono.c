@@ -41,17 +41,17 @@ void UI_AddItem(void* e)
 
 static void* UI_CreateButton(const char* bb, const char* Id, const char* Title, const char* Title2, const char* Icon)
 {
-            void* ButtonElementData = Mono_Get_Class(App_Exe, "Sce.Vsh.ShellUI.Settings.Core", bb);
-            void* ElementData = Mono_Get_Class(App_Exe, "Sce.Vsh.ShellUI.Settings.Core", "ElementData");
-            void* Instance = Mono_New_Object(ButtonElementData);
-            mono_runtime_object_init(Instance);
-            Mono_Set_Property(ElementData, Instance, "Id", Mono_New_String(Id));
-            Mono_Set_Property(ElementData, Instance, "Title", Mono_New_String(Title));
-            Mono_Set_Property(ElementData, Instance, "Description", Mono_New_String(Title2));
-            if (Icon && Icon[0])
-            {
-                Mono_Set_Property(ElementData, Instance, "Icon", Mono_New_String(Icon));
-            }
+    void* ButtonElementData = Mono_Get_Class(App_Exe, "Sce.Vsh.ShellUI.Settings.Core", bb);
+    void* ElementData = Mono_Get_Class(App_Exe, "Sce.Vsh.ShellUI.Settings.Core", "ElementData");
+    void* Instance = Mono_New_Object(ButtonElementData);
+    mono_runtime_object_init(Instance);
+    Mono_Set_Property(ElementData, Instance, "Id", Mono_New_String(Id));
+    Mono_Set_Property(ElementData, Instance, "Title", Mono_New_String(Title));
+    Mono_Set_Property(ElementData, Instance, "Description", Mono_New_String(Title2));
+    if (Icon && Icon[0])
+    {
+        Mono_Set_Property(ElementData, Instance, "Icon", Mono_New_String(Icon));
+    }
     return Instance;
 }
 

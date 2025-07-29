@@ -84,7 +84,8 @@ static void loadPlugins(SceEntry* args)
         "m_titleid %s\n"
         "m_category %s\n"
         "m_appver %s\n",
-        info.pid, curr_pid,
+        info.pid,
+        curr_pid,
         info.m_titleid,
         info.m_category,
         info.m_appver);
@@ -109,23 +110,23 @@ static void loadPlugins(SceEntry* args)
 
 extern "C"
 {
-    attr_public const char* g_pluginName = "plugin_loader";
-    attr_public const char* g_pluginDesc = "Plugin loader.";
-    attr_public const char* g_pluginAuth = "illusiony";
-    attr_public const char* g_pluginVersion = "Git Commit: " GIT_COMMIT
-                                              "\n"
-                                              "Git Branch: " GIT_VER
-                                              "\n"
-                                              "Git Commit Number: " GIT_NUM_STR
-                                              "\n"
-                                              "Built: " BUILD_DATE;  // 1.00
-    attr_public int plugin_load(SceEntry* args, const void* atexit_handler)
-    {
-        loadPlugins(args);
-        return 0;
-    }
-    attr_public int plugin_unload(SceEntry* args, const void* atexit_handler)
-    {
-        return 0;
-    }
+attr_public const char* g_pluginName = "plugin_loader";
+attr_public const char* g_pluginDesc = "Plugin loader.";
+attr_public const char* g_pluginAuth = "illusiony";
+attr_public const char* g_pluginVersion = "Git Commit: " GIT_COMMIT
+                                          "\n"
+                                          "Git Branch: " GIT_VER
+                                          "\n"
+                                          "Git Commit Number: " GIT_NUM_STR
+                                          "\n"
+                                          "Built: " BUILD_DATE;  // 1.00
+attr_public int plugin_load(SceEntry* args, const void* atexit_handler)
+{
+    loadPlugins(args);
+    return 0;
+}
+attr_public int plugin_unload(SceEntry* args, const void* atexit_handler)
+{
+    return 0;
+}
 }
