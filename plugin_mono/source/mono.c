@@ -335,7 +335,7 @@ MonoString* Mono_Add_String(MonoString* monoStr, const char* cStr)
     {
         MonoString* exc_str = mono_object_to_string(exc, NULL);
         char* utf8 = mono_string_to_utf8(exc_str);
-        final_printf( "Exception: %s\n", utf8);
+        final_printf("Exception: %s\n", utf8);
         mono_free(utf8);
         return NULL;
     }

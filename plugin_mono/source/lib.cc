@@ -1,6 +1,5 @@
 extern "C"
 {
-
 #include "../../common/entry.h"
 
 #include <stdint.h>
@@ -230,5 +229,4 @@ attr_public int plugin_load(struct SceEntry* args)
     UploadMonoCall();
     return 0;
 }
-
 }
