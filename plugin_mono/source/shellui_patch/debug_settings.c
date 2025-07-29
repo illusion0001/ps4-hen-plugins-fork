@@ -58,7 +58,7 @@ static int _DownloadRegisterTaskByStorageEx(void* bgft_params, int32_t* refout)
 {
     struct bgft_mono
     {
-        void* pad[2]; // user id and id str
+        void* pad[2];  // user id and id str
         MonoString* content_url;
     };
     struct bgft_mono* bgft_params_u64 = (struct bgft_mono*)bgft_params;
@@ -131,7 +131,7 @@ static void* pkg_new_element_ex(void* inst, MonoString* path)
 {
     void* ret = pkg_new_element_original.ptr(inst, path);
     const void* settings = Mono_Get_Class(App_Exe, "Sce.Vsh.ShellUI.Settings.Core", "ButtonElementData");
-    char path_desc[260+128] = {0};
+    char path_desc[260 + 128] = {0};
     const wchar_t* hdd_path = wcsstr(path->str, L"" mnt_sus_path "/data");
     snprintf(path_desc, _countof(path_desc) - 1, "Path: %ls", hdd_path ? path->str + (_countof(mnt_sus_path) - 1) : path->str);
     Mono_Set_Property(settings, ret, "SecondTitle", Mono_New_String(path_desc));
@@ -154,7 +154,7 @@ void UploadNewPkgInstallerPath(void* app_exe)
         }
     }
     const uintptr_t pkg_new_element = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.Settings.PkgInstaller", "PageDefault", "NewElementData", 1);
-    const int app_exe_h = sceKernelLoadStartModule("/app0/psm/Application/app.exe.sprx", 0,0,0,0,0);
+    const int app_exe_h = sceKernelLoadStartModule("/app0/psm/Application/app.exe.sprx", 0, 0, 0, 0, 0);
     if (pkg_new_element && app_exe_h > 0)
     {
         struct OrbisKernelModuleInfo info = {0};

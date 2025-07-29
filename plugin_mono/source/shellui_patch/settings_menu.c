@@ -749,7 +749,7 @@ static void NewTopMenuPluginSetimage(void* param_1, void* param_2, void* param_3
         {
             case wSID(L"cxml://TopMenuPlugin/tex_plus"):
             {
-                param_3 =(void*) Mono_New_String("file:///user" SHELLUI_HEN_SETTINGS_ICON_PATH);
+                param_3 = (void*)Mono_New_String("file:///user" SHELLUI_HEN_SETTINGS_ICON_PATH);
             }
         }
     }
