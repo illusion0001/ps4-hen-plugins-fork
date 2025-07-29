@@ -38,4 +38,7 @@ BinPackParameters: false
 BinPackArguments: false
 KeepEmptyLinesAtTheStartOfBlocks: false
 EmptyLineAfterAccessModifier: Never
+BraceWrapping:
+  AfterExternBlock: false
+IndentExternBlock: NoIndent
 ...

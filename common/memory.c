@@ -590,17 +590,17 @@ static void CaveBlockInit(void)
     if (!once)
     {
         const int pid = getpid();
-        //sceKernelMprotect(cavePad, cavePadSize, 7);
+        // sceKernelMprotect(cavePad, cavePadSize, 7);
         static const uint8_t m[] = {0xB8, 0x01, 0x00, 0x00, 0x00, 0xC3};
         sys_proc_rw(pid, (uintptr_t)cavePadFunc, m, sizeof(m), 1);
         int (*test)(void);
         test = (void*)cavePadFunc;
-        //memcpy(cavePad, m, sizeof(m));
+        // memcpy(cavePad, m, sizeof(m));
         final_printf("checking executable code, it returned %d\n", test());
         sys_proc_memset(pid, (uintptr_t)cavePadFunc, 0xcc, MAX_CAVE_SIZE);
-        //memset(cavePad, 0xcc, cavePadSize);
-        // DWORD temp = caveInstSize = 0;
-        // VirtualProtect(cavePad, cavePadSize, PAGE_EXECUTE_WRITECOPY, &temp);
+        // memset(cavePad, 0xcc, cavePadSize);
+        //  DWORD temp = caveInstSize = 0;
+        //  VirtualProtect(cavePad, cavePadSize, PAGE_EXECUTE_WRITECOPY, &temp);
         once = true;
         printf("cavePad setup at 0x%p! Size %ld\n", (void*)cavePadFunc, MAX_CAVE_SIZE);
     }

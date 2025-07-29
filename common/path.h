@@ -1,5 +1,7 @@
 #pragma once
 
+// clang-format off
+
 #define BASE_PATH "/data/hen"
 #define USER_PLUGIN_PATH BASE_PATH "/plugins"
 #define HEN_INI "hen.ini"
@@ -19,3 +21,5 @@
 #define SHELLUI_HEN_SETTINGS_ICON_FILE "hen_settings_icon.png"
 #define SHELLUI_HEN_SETTINGS SHELLUI_DATA_PATH "/hen_settings.xml"
 #define SHELLUI_HEN_SETTINGS_ICON_PATH SHELL_UI_ICONS_PATH "/" SHELLUI_HEN_SETTINGS_ICON_FILE
+
+// clang-format on
