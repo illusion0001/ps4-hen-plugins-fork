@@ -164,27 +164,29 @@ static int sceKernelLoadStartModuleInternalForMono_Hook(const char* param_1, voi
     const int md = sceKernelLoadStartModuleInternalForMono_original.ptr(param_1, param_2, param_3, param_4, param_5, param_6);
     debug_printf("path %s load returned 0x%08x\n", param_1, md);
     static bool test = false;
+    static int app_exe_h = 0;
     if (!test && md > 0 && strstr(param_1, "/app0/psm/Application/app.exe.sprx"))
     {
+        app_exe_h = md;
         RunPost(md);
         test = true;
     }
     else if (test)
     {
-        static bool once = false;
-        if (!once)
+        if (app_exe_h > 0)
         {
+            static bool once = false;
             if (!Root_Domain)
             {
                 Root_Domain = mono_get_root_domain();
             }
-            if (Root_Domain)
+            else if (!once && Root_Domain && !App_Exe)
             {
                 App_Exe = mono_get_image("/app0/psm/Application/app.exe");
                 if (App_Exe)
                 {
                     ffinal_printf("app_exe: 0x%p\n", App_Exe);
-                    UploadNewPkgInstallerPath(App_Exe);
+                    UploadNewPkgInstallerPath(App_Exe, app_exe_h);
                     UploadOnBranch(App_Exe);
                     once = true;
                 }
