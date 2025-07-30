@@ -139,7 +139,7 @@ static void* pkg_new_element_ex(void* inst, MonoString* path)
     return ret;
 }
 
-void UploadNewPkgInstallerPath(void* app_exe)
+void UploadNewPkgInstallerPath(void* app_exe, int app_exe_h)
 {
     const uintptr_t SearchDir = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.Settings.PkgInstaller", "SearchJob", "SearchDir", 2);
     if (SearchDir)
@@ -154,7 +154,6 @@ void UploadNewPkgInstallerPath(void* app_exe)
         }
     }
     const uintptr_t pkg_new_element = (uintptr_t)Mono_Get_Address_of_Method(app_exe, "Sce.Vsh.ShellUI.Settings.PkgInstaller", "PageDefault", "NewElementData", 1);
-    const int app_exe_h = sceKernelLoadStartModule("/app0/psm/Application/app.exe.sprx", 0, 0, 0, 0, 0);
     if (pkg_new_element && app_exe_h > 0)
     {
         struct OrbisKernelModuleInfo info = {0};
