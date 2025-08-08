@@ -7,6 +7,7 @@ extern "C"
 #include "../../../common/notify.h"
 #include "../../../common/plugin_common.h"
 #include "../../../common/stringid.h"
+#include "../../../common/path.h"
 #include <stdio.h>
 
 #include <dirent.h>
@@ -138,12 +139,14 @@ static void SetupSettingsRoot(const char* xml)
     char buf2[MAX_BUF] = {};
 #undef MAX_BUF
     memset(buf_fixed, 0, sizeof(buf_fixed));
+    // clang-format off
     str_replace(xml,
                 "\t\t<link id=\"sandbox\" title=\"Sandbox\" file=\"Sandbox/sandbox.xml\" />\r\n",
-                "\t\t<link id=\"hen_settings\" title=\"★ HEN Settings\" file=\"hen_settings.xml\" />\r\n",
+                "\t\t<link id=\"hen_settings\" title=\"★ HEN Settings\" file=\"hen_settings.xml\" icon=\"file://" SHELLUI_HEN_SETTINGS_ICON_PATH  "\" />\r\n",
                 buf,
                 _countof(buf),
                 ADD_BEFORE);
+    // clang-format on
     strncat(buf2, buf, strlen(buf));
     str_replace(buf,
                 "initial_focus_to=\"psn\">\r\n",
