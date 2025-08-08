@@ -26,7 +26,7 @@ jobs:
       zip: '${{ github.workspace }}/plugins.zip'
       zip_glob_path: 'bin/plugins/prx'
       zip_glob: '*.prx'
-      build_tag: b${{ github.run_number }}
+      build_tag: 'build_${{ github.run_number }}'
       hen_path: hen
     steps:
 
@@ -100,4 +100,4 @@ jobs:
       if: github.event_name != 'pull_request'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gh release create ${{ env.build_tag }} ${{ env.zip }} ${{ env.hen_path }}/hen.bin --target ${{ github.sha }} -t "Build ${{ env.build_tag }}" -p
+      run: gh release create ${{ env.build_tag }} ${{ env.zip }} ${{ env.hen_path }}/hen.bin --target ${{ github.sha }} -t "${{ env.build_tag }}" -p
