@@ -1,3 +1,6 @@
 [submodule "extern/libjbc"]
 	path = extern/libjbc
 	url = https://github.com/illusion0001/ps4-libjbc.git
+[submodule "plugin_game_patch/extern/mxml"]
+	path = plugin_game_patch/extern/mxml
+	url = https://github.com/illusion0001/mxml.git
