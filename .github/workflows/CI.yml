@@ -57,6 +57,12 @@ jobs:
         ls .
         echo "OO_PS4_TOOLCHAIN=$PWD/OpenOrbis/PS4Toolchain" >> $GITHUB_ENV
 
+    - name: Build mxml
+      working-directory: plugin_game_patch/extern/mxml/ps4
+      run: |
+        wget https://raw.githubusercontent.com/bucanero/oosdk_libraries/master/build_rules.mk -O $OO_PS4_TOOLCHAIN/build_rules.mk
+        make install PRX_BUILD=1
+
     - name: Build all modules
       run: bash build.sh
 
