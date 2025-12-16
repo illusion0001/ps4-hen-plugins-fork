@@ -53,6 +53,13 @@ static const char* GetXMLAttr(mxml_node_t* node, const char* name)
     return AttrData;
 }
 
+static char input_file[MAX_PATH_] = {0};
+
+static void my_error_xml(const char* m)
+{
+    Notify(TEX_ICON_SYSTEM, "Error in file\n%s\n%s", input_file, m);
+}
+
 static void get_key_init(void)
 {
     uint32_t patch_lines = 0;
@@ -60,7 +67,6 @@ static void get_key_init(void)
     char* patch_buffer = nullptr;
     uint64_t patch_size = 0;
     bool is_goldhen = false;
-    char input_file[MAX_PATH_] = {0};
     snprintf(input_file, sizeof(input_file), BASE_PATH_PATCH_XML "/%s.xml", g_titleid);
     int32_t res = Read_File(input_file, &patch_buffer, &patch_size, 0);
 
@@ -81,6 +87,7 @@ static void get_key_init(void)
         return;
     }
     final_printf("open success %s\n", input_file);
+    mxmlSetErrorCallback(my_error_xml);
 
     if (patch_buffer && patch_size)
     {
@@ -89,7 +96,7 @@ static void get_key_init(void)
 
         if (!tree)
         {
-            final_printf("XML: could not parse XML:\n%s\n", patch_buffer);
+            final_printf("XML: could not parse XML `%s`\n", input_file);
             free(patch_buffer);
             return;
         }
