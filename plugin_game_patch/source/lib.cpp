@@ -10,11 +10,15 @@
 #include "../../plugin_shellcore/source/local_appinfo.h"
 
 #define HEN_PATH BASE_PATH
-// Legacy path testing
-// #define HEN_PATH "/data/GoldHEN"
 #define BASE_PATH_PATCH HEN_PATH "/patches"
 #define BASE_PATH_PATCH_SETTINGS BASE_PATH_PATCH "/settings"
 #define BASE_PATH_PATCH_XML BASE_PATH_PATCH "/xml"
+// Legacy path
+#define GOLDHEN_PATH "/data/GoldHEN"
+#define GOLDHEN_PATCHES_PATH GOLDHEN_PATH "/patches"
+#define GOLDHEN_PATCHES_SETTINGS_PATH GOLDHEN_PATCHES_PATH "/settings"
+#define GOLDHEN_PATCHES_XML_PATH GOLDHEN_PATCHES_PATH "/xml"
+
 #define PLUGIN_NAME "game_patch"
 #define PLUGIN_DESC "Patches game at boot"
 #define PLUGIN_AUTH "illusion"
@@ -55,6 +59,7 @@ static void get_key_init(void)
     uint32_t patch_items = 0;
     char* patch_buffer = nullptr;
     uint64_t patch_size = 0;
+    bool is_goldhen = false;
     char input_file[MAX_PATH_] = {0};
     snprintf(input_file, sizeof(input_file), BASE_PATH_PATCH_XML "/%s.xml", g_titleid);
     int32_t res = Read_File(input_file, &patch_buffer, &patch_size, 0);
@@ -64,8 +69,10 @@ static void get_key_init(void)
         final_printf("failed to open %s(0x%08x), trying legacy path\n", input_file, res);
         // try old goldhen path
         memset(input_file, 0, sizeof(input_file));
-        snprintf(input_file, sizeof(input_file), "/data/GoldHEN/patches/xml/%s.xml", g_titleid);
+        snprintf(input_file, sizeof(input_file), GOLDHEN_PATCHES_XML_PATH "/%s.xml", g_titleid);
         res = Read_File(input_file, &patch_buffer, &patch_size, 0);
+        is_goldhen = res == 0;
+        printf("res 0x%08x is_goldhen %s\n", res, is_goldhen ? "true" : "false");
     }
     if (res < 0)
     {
@@ -105,7 +112,7 @@ static void get_key_init(void)
 
             uint64_t hashout = patch_hash_calc(TitleData, NameData, AppVerData, input_file, AppElfData);
             char settings_path[MAX_PATH_] = {0};
-            snprintf(settings_path, sizeof(settings_path), BASE_PATH_PATCH_SETTINGS "/0x%016lx.txt", hashout);
+            snprintf(settings_path, sizeof(settings_path), "%s/0x%016lx.txt", !is_goldhen ? BASE_PATH_PATCH_SETTINGS : GOLDHEN_PATCHES_SETTINGS_PATH, hashout);
             sceKernelChmod(settings_path, 0777);
             int32_t res = Read_File(settings_path, &settings_buffer, &settings_size, 0);
             final_printf("settings_path: %s, 0x%08x\n", settings_path, res);
@@ -264,10 +271,21 @@ static void mkdir_chmod(const char* path, OrbisKernelMode mode)
 
 static void make_folders(void)
 {
-    mkdir_chmod(HEN_PATH, 0777);
-    mkdir_chmod(BASE_PATH_PATCH, 0777);
-    mkdir_chmod(BASE_PATH_PATCH_XML, 0777);
-    mkdir_chmod(BASE_PATH_PATCH_SETTINGS, 0777);
+    static const char* path_list[] = {
+        HEN_PATH,
+        BASE_PATH_PATCH,
+        BASE_PATH_PATCH_XML,
+        BASE_PATH_PATCH_SETTINGS,
+        GOLDHEN_PATH,
+        GOLDHEN_PATCHES_PATH,
+        GOLDHEN_PATCHES_SETTINGS_PATH,
+        GOLDHEN_PATCHES_XML_PATH,
+    };
+    for (size_t i = 0; i < _countof(path_list); i++)
+    {
+        printf("create %s idx %ld\n", path_list[i], i);
+        mkdir_chmod(path_list[i], 0777);
+    }
 }
 
 extern "C"
