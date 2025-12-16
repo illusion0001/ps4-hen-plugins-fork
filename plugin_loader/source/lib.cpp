@@ -29,21 +29,21 @@ static bool simple_get_bool(const char* val)
            startsWithCase(val, "true");
 }
 
-static void load_module(const char* path, SceEntry* args, disk_appinfo* info)
+static void load_module(const char* path, SceEntry* args, disk_appinfo* info, int32_t moduleId)
 {
     const int m = sceKernelLoadStartModule(path, 0, 0, 0, 0, 0);
     final_printf("load res 0x%08x for %s\n", m, path);
     if (m > 0)
     {
-        int32_t (*load)(struct SceEntry*, disk_appinfo* info) = NULL;
+        int32_t (*load)(struct SceEntry*, disk_appinfo* info, int32_t) = NULL;
         sceKernelDlsym(m, "plugin_load", (void**)&load);
-        int32_t (*unload)(struct SceEntry*, disk_appinfo* info) = NULL;
+        int32_t (*unload)(struct SceEntry*, disk_appinfo* info, int32_t) = NULL;
         sceKernelDlsym(m, "plugin_unload", (void**)&unload);
         if (load)
         {
-            if (load(args, info) && unload)
+            if (load(args, info, moduleId) && unload)
             {
-                unload(args, info);
+                unload(args, info, moduleId);
                 const int unload = sceKernelStopUnloadModule(m, 0, 0, 0, 0, 0);
                 final_printf("Unload result 0x%08x\n", unload);
             }
@@ -98,7 +98,7 @@ static void loadPlugins(SceEntry* args)
             {
                 if (simple_get_bool(key->value))
                 {
-                    load_module(key->key, args, &info);
+                    load_module(key->key, args, &info, 0);
                 }
                 key = key->next;
             }

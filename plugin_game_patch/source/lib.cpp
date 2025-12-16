@@ -298,11 +298,12 @@ static void make_folders(void)
 
 extern "C"
 {
-int32_t attr_public plugin_load(SceEntry* e, disk_appinfo* info)
+int32_t attr_public plugin_load(SceEntry* e, disk_appinfo* info, int32_t moduleId)
 {
+    printf("moduleId 0x%x\n", moduleId);
     struct OrbisKernelModuleInfo info2 = {0};
     info2.size = sizeof(info2);
-    const int r = sceKernelGetModuleInfo(0, &info2);
+    const int r = sceKernelGetModuleInfo(moduleId, &info2);
     printf("sceKernelGetModuleInfoEx 0x%08x\n", r);
     if (r == 0)
     {
@@ -322,7 +323,7 @@ int32_t attr_public plugin_load(SceEntry* e, disk_appinfo* info)
     return 1;
 }
 
-int32_t attr_public plugin_unload(SceEntry* e)
+int32_t attr_public plugin_unload(SceEntry* e, disk_appinfo* info, int32_t moduleId)
 {
     final_printf("<%s\\Ver.0x%08x> %s\n", g_pluginName, g_pluginVersion, __func__);
     return 0;
