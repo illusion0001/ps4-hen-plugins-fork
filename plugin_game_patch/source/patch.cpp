@@ -225,6 +225,26 @@ void patch_data1(const char* patch_type_str, uint64_t addr, const char* value, u
             free(bytearray);
             break;
         }
+        case djb2_hash("nop"):
+        case djb2_hash("fill_nop"):
+        {
+           static int pid = 0;
+           if (!pid)
+           {
+                pid = getpid();
+            }
+            size_t real_value = 0;
+            if (hex_prefix(value))
+            {
+                real_value = strtoll(value, NULL, 16);
+            }
+            else
+            {
+                real_value = strtoll(value, NULL, 10);
+            }
+            sys_proc_memset(pid, addr, 0x90, real_value);
+            break;
+        }
         case djb2_hash("float32"):
         case djb2_hash("mask_float32"):
         {
